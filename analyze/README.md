@@ -1,5 +1,5 @@
 #Install Fastjet and Fastjet contrib
-
+```
 cd ../
 mkdir fastjet
 cd fastjet
@@ -18,8 +18,10 @@ cd fjcontrib-1.021
 make 
 make check
 make install
-
+```
 #Then run the code
+```
 cd ../analyze
 make
 ./anaSubstructure of_PanPFA
+```
