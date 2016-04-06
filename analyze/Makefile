@@ -1,10 +1,10 @@
 # ----------------------------------------
 # inputs 
 
-FASTJETLOCATION=/afs/cern.ch/work/s/syu/vlhc/fastjet/fastjet-install/
+FASTJETLOCATION=/Users/syu/vlhc/fastjet-install
 FASTJETINC :=`$(FASTJETLOCATION)/bin/fastjet-config --cxxflags --plugins`
 FASTJETLIB :=`$(FASTJETLOCATION)/bin/fastjet-config --libs --plugins`
-
+MYFASTJET  :=`$(FASTJETLOCATION)/bin/fastjet-config --cxxflags --libs --plugins`
 ROOTINC := `root-config --glibs --cflags`
 
 # ----------------------------------------

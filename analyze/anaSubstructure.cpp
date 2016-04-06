@@ -23,12 +23,12 @@
 #include "fastjet/PseudoJet.hh"
 #include "fastjet/JetDefinition.hh"
 
-// #include "fastjet/contrib/Nsubjettiness.hh"
-// #include "fastjet/contrib/Njettiness.hh"
-// #include "fastjet/contrib/NjettinessPlugin.hh"
-// #include "fastjet/contrib/EnergyCorrelator.hh"
-// // #include "fastjet/contrib/ModifiedMassDropTagger.hh"
-// #include "fastjet/contrib/SoftDrop.hh"
+#include "fastjet/contrib/Nsubjettiness.hh"
+#include "fastjet/contrib/Njettiness.hh"
+#include "fastjet/contrib/NjettinessPlugin.hh"
+#include "fastjet/contrib/EnergyCorrelator.hh"
+// #include "fastjet/contrib/ModifiedMassDropTagger.hh"
+#include "fastjet/contrib/SoftDrop.hh"
 
 //#ifdef __MAKECINT__
 //#pragma link C++ class vector<float>+;
@@ -36,7 +36,7 @@
 
 using namespace std;
 using namespace fastjet;
-//using namespace fastjet::contrib;
+using namespace fastjet::contrib;
 
 /*
  
@@ -63,11 +63,13 @@ ifstream fin;
 ifstream finMC;
 ifstream finGEN;
 ifstream finCalo;
+ifstream finTrack;
 
 int evtCtr;
 
 int njets;
 double gen_mZp;
+std::vector<float> je;
 std::vector<float> jpt;
 std::vector<float> jp;
 std::vector<float> jeta;
@@ -83,19 +85,21 @@ void readEvent( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventMC( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventGEN( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles );
+void readEventTrack(  std::vector< fastjet::PseudoJet > &allParticles );
 
 void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles);
 void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles);
 void clearVectors(){
     //  INIT
-    jpt.clear();
-    jp.clear();    
-    jeta.clear();
-    jphi.clear();        
-    jmass.clear();
-    jmass_sd.clear();        
-    jmultiplicity.clear();
-    jisleptag.clear();
+  je.clear();
+  jpt.clear();
+  jp.clear();    
+  jeta.clear();
+  jphi.clear();        
+  jmass.clear();
+  jmass_sd.clear();        
+  jmultiplicity.clear();
+  jisleptag.clear();
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char **argv) {
@@ -103,8 +107,10 @@ int main (int argc, char **argv) {
     // std::cout << "hello world" << std::endl;
     std::string type = argv[1];   // type "gg" or "qq"
 
+    // pick only the highest pt particle
     std::vector < fastjet::PseudoJet > allParticles;
-    std::vector < fastjet::PseudoJet > allParticlesCalo;
+    std::vector < fastjet::PseudoJet > allParticlesCalo; // calo clusters matched to PF candidate
+    std::vector < fastjet::PseudoJet > allParticlesTrack; // tracks matched to PF candidate
     std::vector < fastjet::PseudoJet > allParticlesMC; //status3
     std::vector < fastjet::PseudoJet > allParticlesGEN; //status1
 
@@ -121,14 +127,19 @@ int main (int argc, char **argv) {
     finGEN.open(fnameGEN);
 
     char fnameCalo[150];
-    sprintf( fnameCalo, "dat/of_CaloHits.dat" );
+    sprintf( fnameCalo, "dat/%s_Calo.dat",  type.c_str()  );
     finCalo.open(fnameCalo);
+
+    char fnameTrack[150];
+    sprintf( fnameTrack, "dat/%s_Tracks.dat",  type.c_str());
+    finTrack.open(fnameTrack);
 
     char outName[192];
     sprintf( outName, "dat/%s.root", type.c_str() );
     TFile *f = TFile::Open(outName,"RECREATE");
     TTree *tPFA = new TTree("tPFA","Tree with vectors");
     tPFA->Branch("njets"          , &njets      );
+    tPFA->Branch("je"             , &je        );
     tPFA->Branch("jpt"            , &jpt        );
     tPFA->Branch("jp"             , &jp        );    
     tPFA->Branch("jeta"           , &jeta       );
@@ -140,6 +151,7 @@ int main (int argc, char **argv) {
 
     TTree *tcalo = new TTree("tcalo","Tree with vectors");
     tcalo->Branch("njets"          , &njets      );
+    tcalo->Branch("je"             , &je         );
     tcalo->Branch("jpt"            , &jpt        );
     tcalo->Branch("jp"             , &jp        );      
     tcalo->Branch("jeta"           , &jeta       );
@@ -149,8 +161,21 @@ int main (int argc, char **argv) {
     tcalo->Branch("jmultiplicity"  , &jmultiplicity      );    
     tcalo->Branch("jisleptag"      , &jisleptag      );    
 
+    TTree *ttrack = new TTree("ttrack","Tree with vectors");
+    ttrack->Branch("njets"          , &njets      );
+    ttrack->Branch("je"             , &je         );
+    ttrack->Branch("jpt"            , &jpt        );
+    ttrack->Branch("jp"             , &jp        );      
+    ttrack->Branch("jeta"           , &jeta       );
+    ttrack->Branch("jphi"           , &jphi       );
+    ttrack->Branch("jmass"          , &jmass      );    
+    ttrack->Branch("jmass_sd"       , &jmass_sd      );    
+    ttrack->Branch("jmultiplicity"  , &jmultiplicity      );    
+    ttrack->Branch("jisleptag"      , &jisleptag      );    
+
     TTree *tGEN = new TTree("tGEN","Tree with vectors");
     tGEN->Branch("njets"          , &njets      );
+    tGEN->Branch("je"             , &je         );
     tGEN->Branch("jpt"            , &jpt        );
     tGEN->Branch("jp"             , &jp        );          
     tGEN->Branch("jeta"           , &jeta       );
@@ -170,18 +195,27 @@ int main (int argc, char **argv) {
         readEventGEN( allParticlesGEN ); 
         readEventMC( allParticlesMC );
         readEventCalo( allParticlesCalo );
+	readEventTrack( allParticlesTrack);
+
         // std::cout << "size of collection = " << allParticles.size() << "," << allParticlesMC.size() << ", " << allParticlesCalo.size() << std::endl;
 
         if (ctr > 0){
             clearVectors();
             analyzeEvent( allParticles, 0.4, allParticlesMC );
             tPFA->Fill();
+
             clearVectors();
             analyzeEvent( allParticlesCalo, 0.4, allParticlesMC );
             tcalo->Fill();    
+
             clearVectors();
-            analyzeEvent( allParticlesGEN, 0.4, allParticlesMC );
-            tGEN->Fill();  
+	    analyzeEvent( allParticlesTrack, 0.4, allParticlesMC );
+	    ttrack->Fill();
+	    
+	    clearVectors();
+	    analyzeEvent( allParticlesGEN, 0.4, allParticlesMC );
+            tGEN->Fill();
+	    
             analyzeMCEvent( allParticlesMC );
             tMC->Fill();
         }
@@ -190,7 +224,8 @@ int main (int argc, char **argv) {
         allParticlesMC.clear();
         allParticlesGEN.clear();
         allParticlesCalo.clear();
-        
+        allParticlesTrack.clear();
+	
         ctr++;
         std::cout << "ctr = " << ctr << std::endl;
 
@@ -200,6 +235,7 @@ int main (int argc, char **argv) {
     f->cd();
     tPFA->Write();
     tcalo->Write();
+    ttrack->Write();
     tGEN->Write();
     tMC->Write();
     f->Close();
@@ -210,7 +246,7 @@ int main (int argc, char **argv) {
 void readEvent( std::vector< fastjet::PseudoJet > &allParticles ){
     
     // hard-coded! 
-    float etaMax = 0.4;
+    float etaMax = 1.1;
     
     float npart, px, py, pz, e, pdgid, isCh, isPU = 0;
     
@@ -242,7 +278,7 @@ void readEvent( std::vector< fastjet::PseudoJet > &allParticles ){
 void readEventMC( std::vector< fastjet::PseudoJet > &allParticles ){
     
     // hard-coded! 
-    float etaMax = 0.4;
+    float etaMax = 1.1;
     
     float npart, px, py, pz, e, pdgid, isCh, isPU = 0;
     
@@ -274,7 +310,7 @@ void readEventMC( std::vector< fastjet::PseudoJet > &allParticles ){
 void readEventGEN( std::vector< fastjet::PseudoJet > &allParticles ){
     
     // hard-coded! 
-    float etaMax = 0.4;
+    float etaMax = 1.1;
     
     float npart, px, py, pz, e, pdgid, isCh, isPU = 0;
     
@@ -306,7 +342,7 @@ void readEventGEN( std::vector< fastjet::PseudoJet > &allParticles ){
 void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles ){
     
     // hard-coded! 
-    float etaMax = 0.4;
+    float etaMax = 1.1;
     
     float npart, x, y, z, e, pdgid, isCh, isPU = 0;
     
@@ -342,6 +378,39 @@ void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles ){
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
+void readEventTrack( std::vector< fastjet::PseudoJet > &allParticles ){
+    
+    // hard-coded! 
+    float etaMax = 1.1;
+    
+    float npart, px, py, pz, e, pdgid, isCh, isPU = 0;
+    
+    int ctr = 0;
+    while(true){
+        
+        finTrack  >> pdgid >> px >> py >> pz >> e;         
+        // std::cout << "pdgid = " << pdgid << ", " << px << ", " << py << std::endl;
+    
+        if (pdgid == -99){
+            return;
+        }        
+    
+        // fill vector of pseudojets
+        fastjet::PseudoJet curPseudoJet( px, py, pz, e );
+        curPseudoJet.set_user_index(pdgid);
+        if (fabs(curPseudoJet.eta()) < etaMax){
+            allParticles.push_back( curPseudoJet );
+        }
+        
+        if(finTrack.eof()) break;
+        ctr++;
+        // std::cout << "ctr2 = " << ctr << std::endl;
+    }
+    
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles){
 
     std::cout << "analyzing event..." << particles.size() << std::endl;
@@ -357,17 +426,20 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     
     fastjet::ClusterSequenceArea* thisClustering = new fastjet::ClusterSequenceArea(particles, jetDef, fjAreaDefinition);
     // fastjet::ClusterSequenceArea* caloClustering = new fastjet::ClusterSequenceArea(caloclusters, jetDef, fjAreaDefinition);
-    std::vector<fastjet::PseudoJet> out_jets = sorted_by_pt(thisClustering->inclusive_jets(25.0));
-    // std::vector<fastjet::PseudoJet> calo_jets = sorted_by_pt(caloClustering->inclusive_jets(25.0));
+    std::vector<fastjet::PseudoJet> out_jets = sorted_by_E(thisClustering->inclusive_jets(0.0));
 
-    // double beta_sd = 1.0;
-    // double zcut_sd = 0.1;
-    // double mu_sd   = 1.0;
-    // fastjet::contrib::SoftDrop soft_drop_mmdt(0.0, zcut_sd, mu_sd);
+    // std::vector<fastjet::PseudoJet> calo_jets = sorted_by_E(caloClustering->inclusive_jets(25.0));
+
+    double beta_sd = 1.0;
+    double zcut_sd = 0.1;
+    double mu_sd   = 1.0; // for mass drop, equivalent to no cut
+    fastjet::contrib::SoftDrop soft_drop_mmdt(0.0, zcut_sd, mu_sd);
 
     njets = out_jets.size();
-    // std::cout << "number of high pT jets! = " << njets << std::endl;
-    for (unsigned int i = 0; i < out_jets.size(); i++){
+    //    std::cout << "number of high pT jets = " << njets << std::endl;
+    // for (unsigned int i = 0; i < out_jets.size(); i++){
+    // take only the first-leading jet
+    for (unsigned int i = 0; i < out_jets.size() && i < 1; i++){
 
         double isleptag = 0;
         double minDR = 9999.;
@@ -378,15 +450,14 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
             // std::cout << "dr = " << dr << "," << pdgid << std::endl;
             if (minDR > dr && (fabs(pdgid) >= 11) && (fabs(pdgid) < 20) ){ minDR = dr; }
         }
-        // std::cout<< "minDR = " << minDR << std::endl;
         if (minDR < 0.8){ isleptag = 1.; }
-
+	je.push_back( out_jets[i].E() );
         jpt.push_back( out_jets[i].pt() );
         jp.push_back( sqrt(out_jets[i].modp2()) );
         jeta.push_back( out_jets[i].eta() );
         jphi.push_back( out_jets[i].phi() );
         jmass.push_back( out_jets[i].m() );  
-        // jmass_sd.push_back( soft_drop_mmdt( out_jets.at(i) ).m() );        
+	jmass_sd.push_back( soft_drop_mmdt( out_jets.at(i) ).m() );        
         jmultiplicity.push_back( (float) out_jets.at(i).constituents().size() );
         jisleptag.push_back( isleptag );
       
