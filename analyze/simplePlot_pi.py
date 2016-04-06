@@ -44,20 +44,17 @@ def makeCanvas(hists, tags):
 def getHists(tin,tin1,tin2,postfix):
 ### For 1 GeV single pion
 #	h_je      = ROOT.TH1F("h_je"+postfix,"; jet energy; N",100,0,1.5)
-#	h_je.SetNdivisions(5)
 #	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",100,0,1.5)
-#	h_jpt.SetNdivisions(5)
 #	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",100,0,1.5)
-#	h_jp.SetNdivisions(5)
 
 
 ### For 10 GeV single pion
 	h_je      = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,15);
-	h_je.SetNdivisions(5)
+#	h_je.SetNdivisions(10)
 	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,15)
-	h_jpt.SetNdivisions(5)
+#	h_jpt.SetNdivisions(10)
 	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,15)
-	h_jp.SetNdivisions(5)
+#	h_jp.SetNdivisions(10)
 
         
 
@@ -88,7 +85,7 @@ def getHists(tin,tin1,tin2,postfix):
                                 h_jmass.Fill( tin.jmass[n] )
                                 h_jmass_sd.Fill( tin.jmass_sd[n] )	
 
-        print h_je.GetEntries()
+#        print h_je.GetEntries()
         hists = []
 	hists.append( h_je )
 	hists.append( h_jpt )
