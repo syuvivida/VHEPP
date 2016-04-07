@@ -1,120 +1,154 @@
 import ROOT
 import tdrstyle
-tdrstyle.setTDRStyle()
-ROOT.gStyle.SetPadRightMargin(0.15);
-ROOT.gStyle.SetPalette(1);
 import math
+import os
+
+tdrstyle.setTDRStyle()
+ROOT.gStyle.SetPadRightMargin(0.15)
+ROOT.gStyle.SetPalette(1)
 
 def makeCanvas(hists, tags):
+    colors = [1,2,4,5,6,7]
+            
+    leg = ROOT.TLegend(0.2,0.7,0.6,0.9)
+    leg.SetBorderSize(0)
+    leg.SetFillStyle(0)
+    tmax = -999
 
-	colors = [1,2,4,5,6,7]
+    for i in range(len(hists)):
+        leg.AddEntry(hists[i],tags[i],'l')
+        if hists[i].GetMaximum() > tmax:
+            tmax = hists[i].GetMaximum()
+            
+    c = ROOT.TCanvas("c","c",1000,800)
+    for i in range(len(hists)):
+        if i == 0:
+            hists[i].Draw()
+        else: 
+            hists[i].SetLineColor( colors[i] )
+            hists[i].Draw('sames')
 
-	leg = ROOT.TLegend(0.7,0.7,0.9,0.9);
-	leg.SetBorderSize(0);
-	leg.SetFillStyle(0);
-	tmax = -999;
-	for i in range(len(hists)):
-		leg.AddEntry(hists[i],tags[i],'l');
-		if hists[i].GetMaximum() > tmax: tmax = hists[i].GetMaximum();
+        hists[0].Draw('sames')
+        leg.Draw()
 
-	c = ROOT.TCanvas("c","c",1000,800);
-	hists[0].SetMinimum(0);
-	hists[0].SetMaximum(tmax*1.2);
-	for i in range(len(hists)):
-		if i == 0: hists[i].Draw();
-		else: 
-			hists[i].SetLineColor( colors[i] );
-			hists[i].Draw('sames');
+        hists[0].SetMinimum(0)
 
-	leg.Draw();
-	c.SaveAs("plots/"+hists[0].GetName()+".pdf")
-	c.SaveAs("plots/"+hists[0].GetName()+".png")
+        if hists[0].GetName() == "h_jeta_gen" or hists[0].GetName() == "h_jpres_pf" :
+            hists[0].SetMaximum(tmax*1.5)
+        else:
+            hists[0].SetMaximum(tmax*1.3)
 
-def getHists(tin,postfix):
+        c.SaveAs("plots/"+hists[0].GetName()+".pdf")
+        c.SaveAs("plots/"+hists[0].GetName()+".png")
 
-	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",100,0,6000);
-	h_jpt.SetNdivisions(5);
-	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",100,0,6000);
-	h_jp.SetNdivisions(5);
-	h_jeta     = ROOT.TH1F("h_jeta"+postfix,"; eta; N",40,-1,1);
-	h_jphi     = ROOT.TH1F("h_jphi"+postfix,"; phi; N",50,0,2*3.15);
-	h_jmass    = ROOT.TH1F("h_jmass"+postfix,"; mass; N",50,0,200);
-#	h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,"; soft drop mass (#beta = 0); N",50,0,200);
+def getHists(tin,tin1,tin2,postfix):
+	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,3000);
+	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,3000)
+	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,3000)
 
-	# print tin.GetEntriesFast();
+        
+
+	h_jeta     = ROOT.TH1F("h_jeta"+postfix,"; eta; N",80,-2,2)
+	h_jphi     = ROOT.TH1F("h_jphi"+postfix,"; phi; N",50,0,2*3.15)
+	h_jmass    = ROOT.TH1F("h_jmass"+postfix,"; mass; N",50,0,200)
+	h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,"; soft drop mass (#beta = 0); N",50,0,200)
+
+#        print tin.GetEntriesFast()
 	for i in range(tin.GetEntriesFast()):
-		tin.GetEntry(i);
-		for j in range(len(tin.jpt)):
-			# print tin.jisleptag[j]
-			if tin.jisleptag[j] == 0: 
-				# print tin.jpt[j]
-				h_jpt.Fill( tin.jpt[j] );
-				h_jp.Fill( tin.jp[j] );				
-				h_jeta.Fill( tin.jeta[j] );
-				h_jphi.Fill( tin.jphi[j] );
-				h_jmass.Fill( tin.jmass[j] );
-#				h_jmass_sd.Fill( tin.jmass_sd[j] );	
+		tin.GetEntry(i)
+                tin1.GetEntry(i)
+                tin2.GetEntry(i)
+#                print len(tin1.jpt), len(tin2.jpt)
+                for j in range(len(tin1.jpt)):
+#                    print "j=", j
+                    for k in range(len(tin2.jpt)):
+#                        print "k=", k
+                        dr = math.sqrt( (tin1.jphi[j]-tin2.jphi[k])*(tin1.jphi[j]-tin2.jphi[k]) + (tin1.jeta[j]-tin2.jeta[k])*(tin1.jeta[j]-tin2.jeta[k]) )
+#                        print "dr=", dr
+                        if dr < 0.01: 
+                            for n in range(len(tin.jpt)):
+                                h_je.Fill( tin.je[n] )
+                                h_jpt.Fill( tin.jpt[n] )
+                                h_jp.Fill( tin.jp[n] )				
+                                h_jeta.Fill( tin.jeta[n] )
+                                h_jphi.Fill( tin.jphi[n] )
+                                h_jmass.Fill( tin.jmass[n] )
+                                h_jmass_sd.Fill( tin.jmass_sd[n] )	
 
-	hists = [];
-	hists.append( h_jpt );
-	hists.append( h_jp );
-	hists.append( h_jeta );
-	hists.append( h_jphi );
-	hists.append( h_jmass );
-#	hists.append( h_jmass_sd );
-	return hists;
+#        print h_je.GetEntries()
+        hists = []
+	hists.append( h_je )
+	hists.append( h_jpt )
+	hists.append( h_jp )
+	hists.append( h_jeta )
+	hists.append( h_jphi )
+	hists.append( h_jmass )
+	hists.append( h_jmass_sd )
+	return hists
+
 
 def MCinfo(tin):
 
-	h_mzp = ROOT.TH1F("h_mh2","; H2 mass; N",100,4000,6000);
-	h_mzp.SetNdivisions(5);
+    h_mzp = ROOT.TH1F("h_mh2","; H2 mass; N",100,4000,6000);
+    h_mzp.SetNdivisions(5);
+    for i in range(tin.GetEntriesFast()):
+        tin.GetEntry(i);
+        h_mzp.Fill(tin.gen_mZp);
+    return h_mzp;
+
+
+def GetResolutions(tin,tin1,tin2,pf):
+
+	h_jpres = ROOT.TH1F("h_jpres_"+pf, "; (P - PGEN)/PGEN; au", 50,-0.2,0.2)
+
 	for i in range(tin.GetEntriesFast()):
-		tin.GetEntry(i);
-		h_mzp.Fill(tin.gen_mZp);
-	return h_mzp;
-
-def GetResolutions(tin1,tin2,pf):
-
-	h_jpres = ROOT.TH1F("h_jpres_"+pf, "; (P - PGEN)/PGEN; au", 50,-0.5,0.5);
-
-	for i in range(tin1.GetEntriesFast()):
-		tin1.GetEntry(i);
-		tin2.GetEntry(i);
+		tin1.GetEntry(i)
+		tin2.GetEntry(i)
+                tin.GetEntry(i)
 
 		for j in range(len(tin1.jpt)):
 			if tin1.jisleptag[j] == 0: 
 				for k in range(len(tin2.jpt)):
-
-					dr = math.sqrt( (tin1.jphi[j]-tin2.jphi[k])*(tin1.jphi[j]-tin2.jphi[k]) + (tin1.jeta[j]-tin2.jeta[k])*(tin1.jeta[j]-tin2.jeta[k]) );
-					if dr < 0.4: 
-						h_jpres.Fill( (tin1.jp[j] - tin2.jp[k])/tin2.jp[k] );				
+					dr = math.sqrt( (tin1.jphi[j]-tin2.jphi[k])*(tin1.jphi[j]-tin2.jphi[k]) + (tin1.jeta[j]-tin2.jeta[k])*(tin1.jeta[j]-tin2.jeta[k]) )
+					if dr < 0.01: 
+                                            for n in range(len(tin.jpt)):
+						h_jpres.Fill( (tin.jp[j] - tin2.jp[k])/tin2.jp[k] )				
 				
-	return h_jpres;
+	return h_jpres
 
 if __name__ == '__main__':
 
-	fa = ROOT.TFile("dat/of_PanPFA.root");
-	ta = fa.Get("tPFA");
-	tb = fa.Get("tGEN");
-	tc = fa.Get("tcalo");
-	tmc = fa.Get("tMC");
+        directory = 'plots'
+        if not os.path.exists(directory):
+                os.makedirs(directory)
+        else:
+                print 'the directory already exists! rememebr to clean up your work area'
+                quit()
 
+        fa = ROOT.TFile("dat/of_PanPFA.root")
+        ta = fa.Get("tPFA")
+        tg = fa.Get("tGEN")
+        tc = fa.Get("tcalo")
+        tt = fa.Get("ttrack")
+        tmc = fa.Get("tMC")
 
-	print "Getting hists..."
-	ha = getHists(ta,'a');
-	hb = getHists(tb,'b');
-	hc = getHists(tc,'c');	
+        print "Getting hists..."
+        ha = getHists(ta,ta,tg,'_PF')
+        hg = getHists(tg,ta,tg,'_gen')
+        hc = getHists(tc,ta,tg,'_calo')
+        ht = getHists(tt,ta,tg,'_trk')	
 
-	for i in range(len(ha)):
-		makeCanvas( [ha[i],hb[i],hc[i]], ['pf','gen','calo'] )
+        for i in range(len(ha)):
+            makeCanvas( [hg[i],ha[i],ht[i], hc[i]], ['gen','pf','track (associated) ','calo (associated)'] )
 
-	hmc = MCinfo(tmc);
-	makeCanvas([hmc],['particlelevel'])
-	# hres = Resolutions(tb,ta,tc);
+        hmc = MCinfo(tmc);
+        makeCanvas([hmc],['particlelevel'])
 
-	hres_pf = GetResolutions( ta, tb, "pf" );
-	hres_cal = GetResolutions( tc, tb, "calo" );
-	makeCanvas( [hres_pf,hres_cal], ['pf','calo'] )
+        hres_pf    = GetResolutions(ta,ta,tg, "pf" )
+        hres_track = GetResolutions(tt,ta,tg, "track")
+        hres_cal   = GetResolutions(tc,ta,tg, "calo" )
+        makeCanvas( [hres_pf, hres_track, hres_cal], ['pf','track (associated)', 'calo (associated)'] )
+
 
 
 

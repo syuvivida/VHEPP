@@ -49,12 +49,19 @@ def getHists(tin,tin1,tin2,postfix):
 
 
 ### For 10 GeV single pion
-	h_je      = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,15);
-#	h_je.SetNdivisions(10)
-	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,15)
-#	h_jpt.SetNdivisions(10)
-	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,15)
-#	h_jp.SetNdivisions(10)
+#	h_je      = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,15);
+#	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,15)
+#	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,15)
+
+### For 100 GeV single pion
+#	h_je      = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,150);
+#	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,150)
+#	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,150)
+
+### For 1000 GeV single pion
+	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,1500);
+	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,1500)
+	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,1500)
 
         
 
@@ -97,21 +104,22 @@ def getHists(tin,tin1,tin2,postfix):
 	return hists
 
 
-def GetResolutions(tin1,tin2,pf):
+def GetResolutions(tin,tin1,tin2,pf):
 
 	h_jpres = ROOT.TH1F("h_jpres_"+pf, "; (P - PGEN)/PGEN; au", 50,-0.2,0.2)
 
-	for i in range(tin1.GetEntriesFast()):
+	for i in range(tin.GetEntriesFast()):
 		tin1.GetEntry(i)
 		tin2.GetEntry(i)
+                tin.GetEntry(i)
 
 		for j in range(len(tin1.jpt)):
 			if tin1.jisleptag[j] == 0: 
 				for k in range(len(tin2.jpt)):
-
 					dr = math.sqrt( (tin1.jphi[j]-tin2.jphi[k])*(tin1.jphi[j]-tin2.jphi[k]) + (tin1.jeta[j]-tin2.jeta[k])*(tin1.jeta[j]-tin2.jeta[k]) )
 					if dr < 0.01: 
-						h_jpres.Fill( (tin1.jp[j] - tin2.jp[k])/tin2.jp[k] )				
+                                            for n in range(len(tin.jpt)):
+						h_jpres.Fill( (tin.jp[j] - tin2.jp[k])/tin2.jp[k] )				
 				
 	return h_jpres
 
@@ -141,9 +149,9 @@ if __name__ == '__main__':
             makeCanvas( [hg[i],ha[i],ht[i], hc[i]], ['gen','pf','track (associated) ','calo (associated)'] )
 
 
-        hres_pf = GetResolutions( ta, tg, "pf" )
-        hres_track = GetResolutions( tt, tg, "track")
-        hres_cal = GetResolutions( tc, tg, "calo" )
+        hres_pf    = GetResolutions(ta,ta,tg, "pf" )
+        hres_track = GetResolutions(tt,ta,tg, "track")
+        hres_cal   = GetResolutions(tc,ta,tg, "calo" )
         makeCanvas( [hres_pf, hres_track, hres_cal], ['pf','track (associated)', 'calo (associated)'] )
 
 
