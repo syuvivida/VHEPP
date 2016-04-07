@@ -41,11 +41,12 @@ def makeCanvas(hists, tags):
         c.SaveAs("plots/"+hists[0].GetName()+".pdf")
         c.SaveAs("plots/"+hists[0].GetName()+".png")
 
+# variable, PF, gen
 def getHists(tin,tin1,tin2,postfix):
 ### For 1 GeV single pion
-#	h_je      = ROOT.TH1F("h_je"+postfix,"; jet energy; N",100,0,1.5)
-#	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",100,0,1.5)
-#	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",100,0,1.5)
+	h_je      = ROOT.TH1F("h_je"+postfix,"; jet energy; N",100,0,1.5)
+	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",100,0,1.5)
+	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",100,0,1.5)
 
 
 ### For 10 GeV single pion
@@ -59,9 +60,9 @@ def getHists(tin,tin1,tin2,postfix):
 #	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,150)
 
 ### For 1000 GeV single pion
-	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,1500);
-	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,1500)
-	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,1500)
+#	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,1500);
+#	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,1500)
+#	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,1500)
 
         
 
@@ -84,13 +85,15 @@ def getHists(tin,tin1,tin2,postfix):
 #                        print "dr=", dr
                         if dr < 0.01: 
                             for n in range(len(tin.jpt)):
-                                h_je.Fill( tin.je[n] )
-                                h_jpt.Fill( tin.jpt[n] )
-                                h_jp.Fill( tin.jp[n] )				
-                                h_jeta.Fill( tin.jeta[n] )
-                                h_jphi.Fill( tin.jphi[n] )
-                                h_jmass.Fill( tin.jmass[n] )
-                                h_jmass_sd.Fill( tin.jmass_sd[n] )	
+                                drpf = math.sqrt( (tin1.jphi[j]-tin.jphi[n])*(tin1.jphi[j]-tin.jphi[n]) + (tin1.jeta[j]-tin.jeta[n])*(tin1.jeta[j]-tin.jeta[n]) )
+                                if(drpf < 0.4):
+                                    h_je.Fill( tin.je[n] )
+                                    h_jpt.Fill( tin.jpt[n] )
+                                    h_jp.Fill( tin.jp[n] )				
+                                    h_jeta.Fill( tin.jeta[n] )
+                                    h_jphi.Fill( tin.jphi[n] )
+                                    h_jmass.Fill( tin.jmass[n] )
+                                    h_jmass_sd.Fill( tin.jmass_sd[n] )	
 
 #        print h_je.GetEntries()
         hists = []
@@ -106,22 +109,24 @@ def getHists(tin,tin1,tin2,postfix):
 
 def GetResolutions(tin,tin1,tin2,pf):
 
-	h_jpres = ROOT.TH1F("h_jpres_"+pf, "; (P - PGEN)/PGEN; au", 50,-0.2,0.2)
+    h_jpres = ROOT.TH1F("h_jpres_"+pf, "; (P - PGEN)/PGEN; au", 50,-0.2,0.2)
 
-	for i in range(tin.GetEntriesFast()):
-		tin1.GetEntry(i)
-		tin2.GetEntry(i)
-                tin.GetEntry(i)
+    for i in range(tin.GetEntriesFast()):
+        tin1.GetEntry(i)
+        tin2.GetEntry(i)
+        tin.GetEntry(i)
 
-		for j in range(len(tin1.jpt)):
-			if tin1.jisleptag[j] == 0: 
-				for k in range(len(tin2.jpt)):
-					dr = math.sqrt( (tin1.jphi[j]-tin2.jphi[k])*(tin1.jphi[j]-tin2.jphi[k]) + (tin1.jeta[j]-tin2.jeta[k])*(tin1.jeta[j]-tin2.jeta[k]) )
-					if dr < 0.01: 
-                                            for n in range(len(tin.jpt)):
-						h_jpres.Fill( (tin.jp[j] - tin2.jp[k])/tin2.jp[k] )				
+        for j in range(len(tin1.jpt)):
+            if tin1.jisleptag[j] == 0: 
+                for k in range(len(tin2.jpt)):
+                    dr = math.sqrt( (tin1.jphi[j]-tin2.jphi[k])*(tin1.jphi[j]-tin2.jphi[k]) + (tin1.jeta[j]-tin2.jeta[k])*(tin1.jeta[j]-tin2.jeta[k]) )
+                    if dr < 0.01: 
+                        for n in range(len(tin.jpt)):
+                            drpf = math.sqrt( (tin1.jphi[j]-tin.jphi[n])*(tin1.jphi[j]-tin.jphi[n]) + (tin1.jeta[j]-tin.jeta[n])*(tin1.jeta[j]-tin.jeta[n]) )
+                            if(drpf < 0.4):
+                                h_jpres.Fill( (tin.jp[n] - tin2.jp[k])/tin2.jp[k] )				
 				
-	return h_jpres
+    return h_jpres
 
 if __name__ == '__main__':
 

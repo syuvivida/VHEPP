@@ -43,9 +43,9 @@ def makeCanvas(hists, tags):
 
 ## tin, PF, gen
 def getHists(tin,tin1,tin2,postfix):
-	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,3000);
-	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,3000)
-	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,3000)
+	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,6000);
+	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,6000)
+	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,6000)
 
         
 
@@ -94,7 +94,7 @@ def getHists(tin,tin1,tin2,postfix):
 
 def MCinfo(tin):
 
-    h_mzp = ROOT.TH1F("h_mh2","; H2 mass; N",100,0,10000);
+    h_mzp = ROOT.TH1F("h_mzp","; Z' mass; N",100,5000,15000);
     h_mzp.SetNdivisions(5);
     for i in range(tin.GetEntriesFast()):
         tin.GetEntry(i);

@@ -227,7 +227,7 @@ int main (int argc, char **argv) {
         allParticlesTrack.clear();
 	
         ctr++;
-        std::cout << "ctr = " << ctr << std::endl;
+	//        std::cout << "ctr = " << ctr << std::endl;
 
         if(fin.eof()) break;
     }
@@ -413,7 +413,7 @@ void readEventTrack( std::vector< fastjet::PseudoJet > &allParticles ){
 ////////////////////////////////////////////////////////////////////////////////////////
 void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles){
 
-    std::cout << "analyzing event..." << particles.size() << std::endl;
+  //    std::cout << "analyzing event..." << particles.size() << std::endl;
     double rParam = rVal;
     fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, rParam);    
 
@@ -426,9 +426,10 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     
     fastjet::ClusterSequenceArea* thisClustering = new fastjet::ClusterSequenceArea(particles, jetDef, fjAreaDefinition);
     // fastjet::ClusterSequenceArea* caloClustering = new fastjet::ClusterSequenceArea(caloclusters, jetDef, fjAreaDefinition);
-    std::vector<fastjet::PseudoJet> out_jets = sorted_by_E(thisClustering->inclusive_jets(0.0));
+    // taking minium E = 0 for pion gun
+    //    std::vector<fastjet::PseudoJet> out_jets = sorted_by_E(thisClustering->inclusive_jets(0.0));
 
-    // std::vector<fastjet::PseudoJet> calo_jets = sorted_by_E(caloClustering->inclusive_jets(25.0));
+    std::vector<fastjet::PseudoJet> out_jets = sorted_by_E(thisClustering->inclusive_jets(25.0));
 
     double beta_sd = 1.0;
     double zcut_sd = 0.1;
@@ -436,10 +437,12 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     fastjet::contrib::SoftDrop soft_drop_mmdt(0.0, zcut_sd, mu_sd);
 
     njets = out_jets.size();
-    //    std::cout << "number of high pT jets = " << njets << std::endl;
-    // for (unsigned int i = 0; i < out_jets.size(); i++){
-    // take only the first-leading jet
-    for (unsigned int i = 0; i < out_jets.size() && i < 1; i++){
+//     if(njets>2)
+//       std::cout << "number of high pT jets = " << njets << std::endl;
+    // take only the two leading jets for Z' and H2 decays
+    for (unsigned int i = 0; i < out_jets.size() && i < 2; i++){
+    // take only the first-leading jet for pion gun
+    //    for (unsigned int i = 0; i < out_jets.size() && i < 1; i++){
 
         double isleptag = 0;
         double minDR = 9999.;
@@ -471,21 +474,21 @@ void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles){
     fastjet::PseudoJet Zprime;
     for (unsigned int i = 0; i < MCparticles.size(); i++){
         double pdgid =  MCparticles[i].user_index();
-        // if (pdgid == 24){         
-        //     wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-        // };
-        // if (pdgid == -24){
-        //     wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-        // };
-        // if (pdgid == 32){
-        //     Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-        // };
-        if (pdgid == 25){         
-            wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-        };
-        if (pdgid == 35){
-            Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-        };
+//          if (pdgid == 24){         
+//              wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+//          };
+//          if (pdgid == -24){
+//              wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+//          };
+//          if (pdgid == 32){
+//              Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+//          };
+         if (pdgid == 25){         
+             wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+         };
+         if (pdgid == 35){
+             Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+         };
     }
     // fastjet::PseudoJet zprime = wplus + wminus;
     // std::cout << wplus.px() << ", " << wminus.px() << std::endl;
