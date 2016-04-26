@@ -62,6 +62,8 @@ using namespace fastjet::contrib;
 ifstream fin;
 ifstream finMC;
 ifstream finGEN;
+ifstream finGEN_charged;
+ifstream finGEN_nonu;
 ifstream finCalo;
 ifstream finTrack;
 
@@ -78,12 +80,14 @@ std::vector<float> jmass;
 std::vector<float> jmultiplicity;
 std::vector<float> jisleptag;
 std::vector<float> jmass_sd;
-
+const float jetRadius=0.4;
 
 ////////////////////-----------------------------------------------
 void readEvent( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventMC( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventGEN( std::vector< fastjet::PseudoJet > &allParticles );
+void readEventGEN_charged( std::vector< fastjet::PseudoJet > &allParticles );
+void readEventGEN_nonu( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventTrack(  std::vector< fastjet::PseudoJet > &allParticles );
 
@@ -112,7 +116,9 @@ int main (int argc, char **argv) {
     std::vector < fastjet::PseudoJet > allParticlesCalo; // calo clusters matched to PF candidate
     std::vector < fastjet::PseudoJet > allParticlesTrack; // tracks matched to PF candidate
     std::vector < fastjet::PseudoJet > allParticlesMC; //status3
-    std::vector < fastjet::PseudoJet > allParticlesGEN; //status1
+    std::vector < fastjet::PseudoJet > allParticlesGEN; //status1 //etamax < 1.1
+    std::vector < fastjet::PseudoJet > allParticlesGEN_charged; //status1 // only charged
+    std::vector < fastjet::PseudoJet > allParticlesGEN_nonu; //status1
 
     char fname[150];
     sprintf( fname, "dat/%s.dat", type.c_str() );
@@ -125,6 +131,8 @@ int main (int argc, char **argv) {
     char fnameGEN[150];
     sprintf( fnameGEN, "dat/of_status1.dat" );
     finGEN.open(fnameGEN);
+    finGEN_charged.open(fnameGEN);
+    finGEN_nonu.open(fnameGEN);
 
     char fnameCalo[150];
     sprintf( fnameCalo, "dat/%s_Calo.dat",  type.c_str()  );
@@ -185,6 +193,32 @@ int main (int argc, char **argv) {
     tGEN->Branch("jmultiplicity"  , &jmultiplicity      );    
     tGEN->Branch("jisleptag"      , &jisleptag      );        
 
+
+    TTree *tGEN_charged = new TTree("tGEN_charged","Tree with vectors");
+    tGEN_charged->Branch("njets"          , &njets      );
+    tGEN_charged->Branch("je"             , &je         );
+    tGEN_charged->Branch("jpt"            , &jpt        );
+    tGEN_charged->Branch("jp"             , &jp        );          
+    tGEN_charged->Branch("jeta"           , &jeta       );
+    tGEN_charged->Branch("jphi"           , &jphi       );
+    tGEN_charged->Branch("jmass"          , &jmass      );    
+    tGEN_charged->Branch("jmass_sd"       , &jmass_sd      );    
+    tGEN_charged->Branch("jmultiplicity"  , &jmultiplicity      );    
+    tGEN_charged->Branch("jisleptag"      , &jisleptag      );        
+
+    TTree *tGEN_nonu = new TTree("tGEN_nonu","Tree with vectors");
+    tGEN_nonu->Branch("njets"          , &njets      );
+    tGEN_nonu->Branch("je"             , &je         );
+    tGEN_nonu->Branch("jpt"            , &jpt        );
+    tGEN_nonu->Branch("jp"             , &jp        );          
+    tGEN_nonu->Branch("jeta"           , &jeta       );
+    tGEN_nonu->Branch("jphi"           , &jphi       );
+    tGEN_nonu->Branch("jmass"          , &jmass      );    
+    tGEN_nonu->Branch("jmass_sd"       , &jmass_sd      );    
+    tGEN_nonu->Branch("jmultiplicity"  , &jmultiplicity      );    
+    tGEN_nonu->Branch("jisleptag"      , &jisleptag      );        
+
+
     TTree *tMC = new TTree("tMC","Tree with vectors");
     tMC->Branch("gen_mZp"          , &gen_mZp      );
 
@@ -193,29 +227,39 @@ int main (int argc, char **argv) {
 
         readEvent( allParticles );
         readEventGEN( allParticlesGEN ); 
+ 	readEventGEN_charged( allParticlesGEN_charged ); 
+	readEventGEN_nonu( allParticlesGEN_nonu );
+
         readEventMC( allParticlesMC );
         readEventCalo( allParticlesCalo );
 	readEventTrack( allParticlesTrack);
 
         // std::cout << "size of collection = " << allParticles.size() << "," << allParticlesMC.size() << ", " << allParticlesCalo.size() << std::endl;
-
         if (ctr > 0){
             clearVectors();
-            analyzeEvent( allParticles, 0.4, allParticlesMC );
+            analyzeEvent( allParticles, jetRadius, allParticlesMC );
             tPFA->Fill();
 
             clearVectors();
-            analyzeEvent( allParticlesCalo, 0.4, allParticlesMC );
+            analyzeEvent( allParticlesCalo, jetRadius, allParticlesMC );
             tcalo->Fill();    
 
             clearVectors();
-	    analyzeEvent( allParticlesTrack, 0.4, allParticlesMC );
+	    analyzeEvent( allParticlesTrack, jetRadius, allParticlesMC );
 	    ttrack->Fill();
 	    
 	    clearVectors();
-	    analyzeEvent( allParticlesGEN, 0.4, allParticlesMC );
+	    analyzeEvent( allParticlesGEN, jetRadius, allParticlesMC );
             tGEN->Fill();
-	    
+	 
+ 	    clearVectors();
+ 	    analyzeEvent( allParticlesGEN_charged, jetRadius, allParticlesMC );
+	    tGEN_charged->Fill();
+ 
+ 	    clearVectors();
+ 	    analyzeEvent( allParticlesGEN_nonu, jetRadius, allParticlesMC );
+	    tGEN_nonu->Fill();
+  
             analyzeMCEvent( allParticlesMC );
             tMC->Fill();
         }
@@ -223,11 +267,13 @@ int main (int argc, char **argv) {
         allParticles.clear();
         allParticlesMC.clear();
         allParticlesGEN.clear();
+        allParticlesGEN_charged.clear();
+        allParticlesGEN_nonu.clear();
         allParticlesCalo.clear();
         allParticlesTrack.clear();
 	
         ctr++;
-	//        std::cout << "ctr = " << ctr << std::endl;
+	std::cout << "ctr = " << ctr << std::endl;
 
         if(fin.eof()) break;
     }
@@ -237,6 +283,8 @@ int main (int argc, char **argv) {
     tcalo->Write();
     ttrack->Write();
     tGEN->Write();
+    tGEN_charged->Write();
+    tGEN_nonu->Write();
     tMC->Write();
     f->Close();
 
@@ -310,16 +358,13 @@ void readEventMC( std::vector< fastjet::PseudoJet > &allParticles ){
 void readEventGEN( std::vector< fastjet::PseudoJet > &allParticles ){
     
     // hard-coded! 
-    float etaMax = 1.1;
+    float etaMax = 1.1; // to check how good the generator-level jets are
     
     float npart, px, py, pz, e, pdgid, isCh, isPU = 0;
-    
     int ctr = 0;
     while(true){
         
         finGEN  >> pdgid >> px >> py >> pz >> e;         
-        // std::cout << "pdgid = " << pdgid << ", " << px << ", " << py << std::endl;
-    
         if (pdgid == -99){
             return;
         }        
@@ -337,6 +382,92 @@ void readEventGEN( std::vector< fastjet::PseudoJet > &allParticles ){
     }
     
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+void readEventGEN_charged( std::vector< fastjet::PseudoJet > &allParticles ){
+    
+    // hard-coded! 
+    float etaMax = 1.1; // to check how good the generator-level jets are
+    
+    float npart, px, py, pz, e, pdgid, isCh, isPU = 0;
+
+    int ctr = 0;
+    while(true){
+        
+        finGEN_charged >> pdgid >> px >> py >> pz >> e;         
+        // std::cout << "pdgid = " << pdgid << ", " << px << ", " << py << std::endl;
+    
+        if (pdgid == -99){
+            return;
+        }        
+ 	int pdg=abs(pdgid);
+  	if(pdg== 22 || pdg== 12 || pdg== 14 || pdg== 16 
+  	   || pdg== 130 || pdg== 310 || pdg== 311 || pdg == 2112 ||
+  	   pdg== 3122){
+        if(finGEN_charged.eof()) break;
+ 	else
+ 	  continue;
+	}
+	//	std::cout << pdg << std::endl;
+        // fill vector of pseudojets
+        fastjet::PseudoJet curPseudoJet( px, py, pz, e );
+        curPseudoJet.set_user_index(pdgid);
+        if (fabs(curPseudoJet.eta()) < etaMax){
+            allParticles.push_back( curPseudoJet );
+        }
+        
+        if(finGEN_charged.eof()) break;
+        ctr++;
+        // std::cout << "ctr2 = " << ctr << std::endl;
+    }
+    
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+void readEventGEN_nonu( std::vector< fastjet::PseudoJet > &allParticles ){
+    
+    // hard-coded! 
+    float etaMax = 1.1; // to check how good the generator-level jets are
+    
+    float npart, px, py, pz, e, pdgid, isCh, isPU = 0;
+
+    int ctr = 0;
+    while(true){
+        
+        finGEN_nonu >> pdgid >> px >> py >> pz >> e;         
+        // std::cout << "pdgid = " << pdgid << ", " << px << ", " << py << std::endl;
+    
+        if (pdgid == -99){
+            return;
+        }        
+ 	int pdg=abs(pdgid);
+  	if(pdg== 12 || pdg== 14 || pdg== 16){
+        if(finGEN_nonu.eof()) break;
+ 	else
+ 	  continue;
+	}
+	//	std::cout << pdg << std::endl;
+        // fill vector of pseudojets
+        fastjet::PseudoJet curPseudoJet( px, py, pz, e );
+        curPseudoJet.set_user_index(pdgid);
+        if (fabs(curPseudoJet.eta()) < etaMax){
+            allParticles.push_back( curPseudoJet );
+        }
+        
+        if(finGEN_nonu.eof()) break;
+        ctr++;
+        // std::cout << "ctr2 = " << ctr << std::endl;
+    }
+    
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles ){
@@ -362,7 +493,11 @@ void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles ){
         if (pdgid == -99){
             return;
         }        
-    
+	if(cp4.E()<1.0)
+	  {
+	    if(finCalo.eof()) break;
+	    else continue;
+	  }
         // fill vector of pseudojets
         fastjet::PseudoJet curPseudoJet( cp4.Px(), cp4.Py(), cp4.Pz(), cp4.E() );
         curPseudoJet.set_user_index(pdgid);
@@ -451,9 +586,9 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
             double pdgid =  fabs(MCparticles[j].user_index());
             double dr = sqrt( pow(MCparticles[j].phi()-out_jets[i].phi(),2) + pow(MCparticles[j].eta()-out_jets[i].eta(),2) );
             // std::cout << "dr = " << dr << "," << pdgid << std::endl;
-            if (minDR > dr && (fabs(pdgid) >= 11) && (fabs(pdgid) < 20) ){ minDR = dr; }
+            if (minDR > dr && (fabs(pdgid)==11 || fabs(pdgid)==13 || fabs(pdgid)==15) ){ minDR = dr; }
         }
-        if (minDR < 0.8){ isleptag = 1.; }
+        if (minDR < jetRadius){ isleptag = 1.; }
 	je.push_back( out_jets[i].E() );
         jpt.push_back( out_jets[i].pt() );
         jp.push_back( sqrt(out_jets[i].modp2()) );

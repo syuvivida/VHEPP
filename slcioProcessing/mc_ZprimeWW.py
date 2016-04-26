@@ -17,7 +17,7 @@ import os
 
 # make list of files..
 import glob
-files=glob.glob("/home/syu/muon_collider/tev5mumu_mg5_2HDMexovv/rfull006/*.slcio")
+files=glob.glob("/home/syu/muon_collider/tev10mumu_pythia6_zprime10tev_ww/rfull006/*.slcio")
 factory = LCFactory.getInstance()
 reader = factory.createLCReader()
 directory = 'dat'

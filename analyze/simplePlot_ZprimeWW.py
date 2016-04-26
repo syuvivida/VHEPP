@@ -9,8 +9,11 @@ ROOT.gStyle.SetPalette(1)
 
 def makeCanvas(hists, tags):
     colors = [1,2,4,5,6,7]
-            
-    leg = ROOT.TLegend(0.2,0.7,0.6,0.9)
+    if hists[0].GetName() == "h_jpres_pf":
+        leg = ROOT.TLegend(0.2,0.75,0.6,0.9)
+    else:
+        leg = ROOT.TLegend(0.2,0.6,0.6,0.9)
+    leg.SetHeader("Jet radius=0.4")            
     leg.SetBorderSize(0)
     leg.SetFillStyle(0)
     tmax = -999
@@ -33,19 +36,19 @@ def makeCanvas(hists, tags):
 
         hists[0].SetMinimum(0)
 
-        if hists[0].GetName() == "h_jeta_gen" or hists[0].GetName() == "h_jpres_pf" :
-            hists[0].SetMaximum(tmax*1.5)
+        if hists[0].GetName() == "h_jeta_gen" or hists[0].GetName() == "h_jpres_pf" or hists[0].GetName() == "h_jmass_gen" or hists[0].GetName() == "h_jmass_sd_gen":
+            hists[0].SetMaximum(tmax*1.9)
         else:
-            hists[0].SetMaximum(tmax*1.3)
+            hists[0].SetMaximum(tmax*1.5)
 
         c.SaveAs("plots/"+hists[0].GetName()+".pdf")
         c.SaveAs("plots/"+hists[0].GetName()+".png")
 
 ## tin, PF, gen
 def getHists(tin,tin1,tin2,postfix):
-	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",150,0,6000);
-	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",150,0,6000)
-	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",150,0,6000)
+	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",100,0,6000);
+	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",100,0,6000)
+	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",100,0,6000)
 
         
 
@@ -135,20 +138,27 @@ if __name__ == '__main__':
                 quit()
 
         fa = ROOT.TFile("dat/of_PanPFA.root")
-        ta = fa.Get("tPFA")
+
         tg = fa.Get("tGEN")
+        tg_charged = fa.Get("tGEN_charged")
+        tg_nonu    = fa.Get("tGEN_nonu")
+
+        ta = fa.Get("tPFA")
         tc = fa.Get("tcalo")
         tt = fa.Get("ttrack")
         tmc = fa.Get("tMC")
 
         print "Getting hists..."
-        ha = getHists(ta,ta,tg,'_PF')
         hg = getHists(tg,ta,tg,'_gen')
+        hg_charged = getHists(tg_charged,ta,tg,'_gen_charged')
+        hg_nonu    = getHists(tg_nonu,ta,tg,'_gen_nonu')
+
+        ha = getHists(ta,ta,tg,'_PF')
         hc = getHists(tc,ta,tg,'_calo')
         ht = getHists(tt,ta,tg,'_trk')	
 
         for i in range(len(ha)):
-            makeCanvas( [hg[i],ha[i],ht[i], hc[i]], ['gen','pf','track (associated) ','calo (associated)'] )
+            makeCanvas( [hg[i],hg_charged[i],hg_nonu[i],ha[i],ht[i], hc[i]], ['gen','gen_charged','gen_nonu','pf','track (associated) ','calo (associated)'] )
 
         hmc = MCinfo(tmc);
         makeCanvas([hmc],['particlelevel'])
