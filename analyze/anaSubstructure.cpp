@@ -80,7 +80,7 @@ std::vector<float> jmass;
 std::vector<float> jmultiplicity;
 std::vector<float> jisleptag;
 std::vector<float> jmass_sd;
-const float jetRadius=0.4;
+float jetRadius;
 
 ////////////////////-----------------------------------------------
 void readEvent( std::vector< fastjet::PseudoJet > &allParticles );
@@ -109,7 +109,11 @@ void clearVectors(){
 int main (int argc, char **argv) {
     
     // std::cout << "hello world" << std::endl;
-    std::string type = argv[1];   // type "gg" or "qq"
+    std::string type = "of_PanPFA";   // type "gg" or "qq"
+    std::string inputFolder = argv[1];
+    jetRadius = (float)atof(argv[2]);
+
+    std::cout << "jetRadius = " << jetRadius << std::endl;
 
     // pick only the highest pt particle
     std::vector < fastjet::PseudoJet > allParticles;
@@ -121,29 +125,29 @@ int main (int argc, char **argv) {
     std::vector < fastjet::PseudoJet > allParticlesGEN_nonu; //status1
 
     char fname[150];
-    sprintf( fname, "dat/%s.dat", type.c_str() );
+    sprintf( fname, "%s/%s.dat", inputFolder.c_str(), type.c_str() );
     fin.open(fname);
 
     char fnameMC[150];
-    sprintf( fnameMC, "dat/of_status3.dat" );
+    sprintf( fnameMC, "%s/of_status3.dat", inputFolder.c_str());
     finMC.open(fnameMC);
 
     char fnameGEN[150];
-    sprintf( fnameGEN, "dat/of_status1.dat" );
+    sprintf( fnameGEN, "%s/of_status1.dat", inputFolder.c_str());
     finGEN.open(fnameGEN);
     finGEN_charged.open(fnameGEN);
     finGEN_nonu.open(fnameGEN);
 
     char fnameCalo[150];
-    sprintf( fnameCalo, "dat/%s_Calo.dat",  type.c_str()  );
+    sprintf( fnameCalo, "%s/%s_Calo.dat", inputFolder.c_str(), type.c_str());
     finCalo.open(fnameCalo);
 
     char fnameTrack[150];
-    sprintf( fnameTrack, "dat/%s_Tracks.dat",  type.c_str());
+    sprintf( fnameTrack, "%s/%s_Tracks.dat", inputFolder.c_str(), type.c_str());
     finTrack.open(fnameTrack);
 
     char outName[192];
-    sprintf( outName, "dat/%s.root", type.c_str() );
+    sprintf( outName, "%s/radius%.1f_%s.root", inputFolder.c_str(), jetRadius, type.c_str() );
     TFile *f = TFile::Open(outName,"RECREATE");
     TTree *tPFA = new TTree("tPFA","Tree with vectors");
     tPFA->Branch("njets"          , &njets      );
@@ -565,6 +569,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     //    std::vector<fastjet::PseudoJet> out_jets = sorted_by_E(thisClustering->inclusive_jets(0.0));
 
     std::vector<fastjet::PseudoJet> out_jets = sorted_by_E(thisClustering->inclusive_jets(25.0));
+//    std::vector<fastjet::PseudoJet> out_jets = sorted_by_pt(thisClustering->inclusive_jets(1000.0));
 
     double beta_sd = 1.0;
     double zcut_sd = 0.1;
@@ -609,21 +614,21 @@ void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles){
     fastjet::PseudoJet Zprime;
     for (unsigned int i = 0; i < MCparticles.size(); i++){
         double pdgid =  MCparticles[i].user_index();
-//          if (pdgid == 24){         
-//              wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-//          };
-//          if (pdgid == -24){
-//              wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-//          };
-//          if (pdgid == 32){
-//              Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-//          };
-         if (pdgid == 25){         
-             wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-         };
-         if (pdgid == 35){
-             Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-         };
+//           if (pdgid == 24){         
+//               wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+//           };
+//           if (pdgid == -24){
+//               wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+//           };
+//           if (pdgid == 32){
+//               Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+//           };
+          if (pdgid == 25){         
+              wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+          };
+          if (pdgid == 35){
+              Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+          };
     }
     // fastjet::PseudoJet zprime = wplus + wminus;
     // std::cout << wplus.px() << ", " << wminus.px() << std::endl;

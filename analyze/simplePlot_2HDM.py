@@ -3,6 +3,14 @@ import tdrstyle
 import math
 import os
 
+import sys
+for arg in sys.argv: 
+    print arg
+
+inputFolder = sys.argv[1]
+jetRadius = sys.argv[2]
+
+
 tdrstyle.setTDRStyle()
 ROOT.gStyle.SetPadRightMargin(0.15)
 ROOT.gStyle.SetPalette(1)
@@ -14,7 +22,7 @@ def makeCanvas(hists, tags):
         leg = ROOT.TLegend(0.2,0.75,0.6,0.9)
     else:
         leg = ROOT.TLegend(0.2,0.6,0.6,0.9)
-    leg.SetHeader("Jet radius=0.4")
+    leg.SetHeader("Jet radius="+jetRadius)
     leg.SetBorderSize(0)
     leg.SetFillStyle(0)
     tmax = -999
@@ -27,12 +35,12 @@ def makeCanvas(hists, tags):
     c = ROOT.TCanvas("c","c",1000,800)
     for i in range(len(hists)):
         if i == 0:
-            hists[i].Draw()
+            hists[i].DrawNormalized('hist')
         else: 
             hists[i].SetLineColor( colors[i] )
-            hists[i].Draw('sames')
+            hists[i].DrawNormalized('histsames')
 
-        hists[0].Draw('sames')
+        hists[0].DrawNormalized('histsames')
         leg.Draw()
 
 #        hists[0].SetMinimum(0)
@@ -44,8 +52,8 @@ def makeCanvas(hists, tags):
         else:
             hists[0].SetMaximum(tmax*1.3)
 
-        c.SaveAs("plots/"+hists[0].GetName()+".pdf")
-        c.SaveAs("plots/"+hists[0].GetName()+".png")
+        c.SaveAs(directory+"/radius"+jetRadius+"_"+hists[0].GetName()+".pdf")
+        c.SaveAs(directory+"/radius"+jetRadius+"_"+hists[0].GetName()+".png")
 
 ## tin, PF, gen
 def getHists(tin,tin1,tin2,postfix):
@@ -133,14 +141,14 @@ def GetResolutions(tin,tin1,tin2,pf):
 
 if __name__ == '__main__':
 
-        directory = 'plots'
+        directory = 'plots_radius' + jetRadius
         if not os.path.exists(directory):
                 os.makedirs(directory)
         else:
                 print 'the directory already exists! rememebr to clean up your work area'
                 quit()
 
-        fa = ROOT.TFile("dat/of_PanPFA.root")
+        fa = ROOT.TFile(inputFolder+"/radius"+jetRadius+"_of_PanPFA.root")
         tg = fa.Get("tGEN")
         tg_charged = fa.Get("tGEN_charged")
         tg_nonu    = fa.Get("tGEN_nonu")
