@@ -14,28 +14,48 @@ from jhplot import *  # import graphics
 from hephysics.particle import LParticle
 import math
 import os
+import sys
+
+
+for arg in sys.argv: 
+    print arg
+
+
+import ast
+
+filename = sys.argv[1]
+hadronic = ast.literal_eval(sys.argv[2])
+
+print filename
+print hadronic
+
+outputtemp=filename
+directory=outputtemp.rsplit('/', 1)[1]
+if hadronic: 
+    directory += '_onlyhadronic'
+print directory
 
 # make list of files..
 import glob
-files=glob.glob("/home/syu/muon_collider/tev10mumu_pythia6_zprime10tev_ww/rfull006/*.slcio")
+#/home/syu/Sergei/tev40mumu_pythia6_zprime10tev_wwrfull006/
+files = glob.glob(filename+"/*.slcio")
 factory = LCFactory.getInstance()
 reader = factory.createLCReader()
-directory = 'dat'
 if not os.path.exists(directory):
     os.makedirs(directory)
 else:
 	print 'the directory already exists! rememebr to clean up your work area'
 	quit()
 
-fileOutStatus1         = open('dat/of_status1.dat','w');
-fileOutStatus3         = open('dat/of_status3.dat','w');
-fileOutPanPFA          = open('dat/of_PanPFA.dat','w');
-fileOutPanPFA_Tracks   = open('dat/of_PanPFA_Tracks.dat','w');
-fileOutPanPFA_Calo     = open('dat/of_PanPFA_Calo.dat','w');
-fileOutClusters        = open('dat/of_CaloClusters.dat','w');
-fileOutTracks          = open('dat/of_Tracks.dat','w');
-fileOutECaloR          = open('dat/of_ECaloHits_r.dat','w');
-fileOutHCaloR          = open('dat/of_HCaloHits_r.dat','w');
+fileOutStatus1         = open(directory+'/of_status1.dat','w');
+fileOutStatus3         = open(directory+'/of_status3.dat','w');
+fileOutPanPFA          = open(directory+'/of_PanPFA.dat','w');
+fileOutPanPFA_Tracks   = open(directory+'/of_PanPFA_Tracks.dat','w');
+fileOutPanPFA_Calo     = open(directory+'/of_PanPFA_Calo.dat','w');
+fileOutClusters        = open(directory+'/of_CaloClusters.dat','w');
+fileOutTracks          = open(directory+'/of_Tracks.dat','w');
+fileOutECaloR          = open(directory+'/of_ECaloHits_r.dat','w');
+fileOutHCaloR          = open(directory+'/of_HCaloHits_r.dat','w');
 
 
 nEvent=0
@@ -73,6 +93,18 @@ for f in files:
 		fileOutTracks.write( '-99 0 0 0 0 \n' );
                 fileOutECaloR.write( '-99 0 0 0 0 \n' ); 
                 fileOutHCaloR.write( '-99 0 0 0 0 \n' ); 
+
+                ## First check if the event contains neutrinos
+                hasNeutrino = False
+                # Check if this event contains neutrinos
+		for i in range(nMc): # loop over all particles 
+			par=col.getElementAt(i)
+			if par.getGeneratorStatus() == 3: 
+                            if (math.fabs(par.getPDG()) == 12 or math.fabs(par.getPDG()) == 14 or math.fabs(par.getPDG()) == 16):
+                                hasNeutrino =True
+#                print "event ", evt.getEventNumber()
+                if hasNeutrino and hadronic: continue
+#                print "event ", evt.getEventNumber()
 
 		for i in range(nMc): # loop over all particles 
 			par=col.getElementAt(i)
