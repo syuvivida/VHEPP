@@ -787,7 +787,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     fastjet::ClusterSequenceArea* thisClustering = new fastjet::ClusterSequenceArea(particles, jetDef, fjAreaDefinition);
     // fastjet::ClusterSequenceArea* caloClustering = new fastjet::ClusterSequenceArea(caloclusters, jetDef, fjAreaDefinition);
     // taking minium E = 0 for pion gun
-    std::vector<fastjet::PseudoJet> out_jets = sorted_by_E(thisClustering->inclusive_jets(25.0));
+    std::vector<fastjet::PseudoJet> out_jets = sorted_by_pt(thisClustering->inclusive_jets(25.0));
  
     if(counter%8==0)
       for (unsigned int i = 0; i < out_jets.size() ; i++)
