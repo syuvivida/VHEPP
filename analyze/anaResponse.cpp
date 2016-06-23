@@ -83,6 +83,7 @@ int evtCtr;
 
 int njets;
 double gen_mZp;
+double gen_mWW;
 std::vector<float> je;
 std::vector<float> jpt;
 std::vector<float> jp;
@@ -281,6 +282,7 @@ int main (int argc, char **argv) {
 
     TTree *tMC = new TTree("tMC","Tree with vectors");
     tMC->Branch("gen_mZp"          , &gen_mZp      );
+    tMC->Branch("gen_mWW"          , &gen_mWW      );
 
     int ctr = 0;
     counter =0;
@@ -497,8 +499,7 @@ void readEventGEN_charged( std::vector< fastjet::PseudoJet > &allParticles ){
             return;
         }        
  	int pdg=abs(pdgid);
-  	if(//pdg== 22 || 
-	   pdg== 12 || pdg== 14 || pdg== 16 
+  	if( pdg== 12 || pdg== 14 || pdg== 16 
   	   || pdg== 130 || pdg == 2112){
         if(finGEN_charged.eof()) break;
  	else
@@ -587,16 +588,16 @@ void readEventGEN_response( std::vector< fastjet::PseudoJet > &allParticles ){
 	}
 	//	std::cout << "pdg = " << pdg << std::endl;
         // fill vector of pseudojets
-	float response=1;
-	const float A = 1.00647e+00;
-	const float B = -6.45952e+01;
-	const float C = 5.68083e+01;
- 	if(pdg== 22 || pdg ==11)response=1;	
-	else if(e<3)response=0;
-	else if(pdg==13)response=2.0/e;
- 	else response = A*TMath::Erf((e-B)/C);
 
 	
+	float RMS = 0;
+	float response=1;
+
+	if(e<3)response=0;
+
+// 	std::cout << "pdg = " << pdg << std::endl;
+//     	std::cout << "e = " << e << std::endl;
+
    	if(response<1e-6){
 	  if(finGEN_response.eof()) break;
 	  else
@@ -604,17 +605,42 @@ void readEventGEN_response( std::vector< fastjet::PseudoJet > &allParticles ){
 	}
 
 
-	float RMS = (pdg==22 || pdg == 11 || pdg ==13)? 0 : (0.38/sqrt(e) + 0.01)*response;	
+	switch(pdg){
+	case 13:
+	  response=2.0/e;
+	  RMS=0;
+	  break;
+	case 22: case 11:
+	  response = 1;
+	  RMS=(0.15/sqrt(e) + 0.01)*response;
+	  break;
+	default:
+	  const float A = 1.00647e+00;
+	  const float B = -6.45952e+01;
+	  const float C = 5.68083e+01;
+	  response = A*TMath::Erf((e-B)/C);
+	  RMS=(0.38/sqrt(e) + 0.01)*response;	
+	  break;
+	}
+
+
+   	if(response<1e-6){
+	  if(finGEN_response.eof()) break;
+	  else
+	    continue;
+	}
+
+
 	float gauss_smear = myrndm->Gaus(response,RMS);
         fastjet::PseudoJet curPseudoJet( px*gauss_smear, 
 					 py*gauss_smear, 
 					 pz*gauss_smear, 
 					 e*gauss_smear);
+	
 
-//    	std::cout << "e = " << curPseudoJet.e() << std::endl;
 //    	std::cout << "RMS = " << RMS << std::endl;
-//  	std::cout << "response = " << response << std::endl;
-//    	std::cout << "response = " << gauss_smear << std::endl;
+//   	std::cout << "response = " << response << std::endl;
+//     	std::cout << "response = " << gauss_smear << std::endl;
 
         curPseudoJet.set_user_index(pdgid);
         if (fabs(curPseudoJet.eta()) < etaMax){
@@ -644,21 +670,18 @@ void readEventGEN_resolution( std::vector< fastjet::PseudoJet > &allParticles ){
         }        
  	int pdg=abs(pdgid);
   	if(pdg== 12 || pdg== 14 || pdg== 16 
-  	   || pdg== 130 || pdg == 2112 ){
+	   || pdg== 130 || pdg == 2112 
+	   ){
 	  if(finGEN_resolution.eof()) break;
 	  else
 	    continue;
 	}
-	//	std::cout << "pdg = " << pdg << std::endl;
         // fill vector of pseudojets
+
+	float RMS = 0;
 	float response=1;
-	const float A = 1.00647e+00;
-	const float B = -6.45952e+01;
-	const float C = 5.68083e+01;
-	if(pdg==22 || pdg==11)response=1; 
-	else if(pdg==13)response = 2.0/e;
-	else if(e<3)response=0;
-	else response = A*TMath::Erf((e-B)/C);
+
+	if(e<3)response=0;
 
    	if(response<1e-6){
 	  if(finGEN_response.eof()) break;
@@ -666,8 +689,32 @@ void readEventGEN_resolution( std::vector< fastjet::PseudoJet > &allParticles ){
 	    continue;
 	}
 
-	
-	float RMS = (pdg==22 || pdg==11 || pdg==13)? 0: (0.38/sqrt(e) + 0.01)*response;	
+
+	switch(pdg){
+	case 13:
+	  response=2.0/e;
+	  RMS=0;
+	  break;
+	case 22: case 11:
+	  response = 1;
+	  RMS=(0.15/sqrt(e) + 0.01)*response;
+	  break;
+	default:
+	  const float A = 1.00647e+00;
+	  const float B = -6.45952e+01;
+	  const float C = 5.68083e+01;
+	  response = A*TMath::Erf((e-B)/C);
+	  RMS=(0.38/sqrt(e) + 0.01)*response;	
+	  break;
+	}
+
+
+   	if(response<1e-6){
+	  if(finGEN_response.eof()) break;
+	  else
+	    continue;
+	}
+
 	float gauss_smear = myrndm->Gaus(response,RMS);
 //   	std::cout << "e = " << e << std::endl;
 //   	std::cout << "RMS = " << RMS << std::endl;
@@ -844,25 +891,29 @@ void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles){
     fastjet::PseudoJet Zprime;
     for (unsigned int i = 0; i < MCparticles.size(); i++){
         double pdgid =  MCparticles[i].user_index();
-//            if (pdgid == 24){         
-//                wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-//            };
-//            if (pdgid == -24){
-//                wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-//            };
-//            if (pdgid == 32){
-//                Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-//            };
-           if (pdgid == 25){         
-	     wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-           };
-           if (pdgid == 35){
-	     Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-           };
+            if (pdgid == 24){         
+                wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+            if (pdgid == -24){
+                wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+            if (pdgid == 32){
+                Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+            if (pdgid == 25 && wplus.e()<1e-6){         
+ 	     wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+	    else if(pdgid == 25 && wminus.e()<1e-6){         
+	      wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+
+            if (pdgid == 35){
+	      Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
     }
     // fastjet::PseudoJet zprime = wplus + wminus;
     // std::cout << wplus.px() << ", " << wminus.px() << std::endl;
     gen_mZp = Zprime.m();
-
+    gen_mWW = (wplus+wminus).m();
 }
 
