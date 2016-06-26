@@ -72,20 +72,20 @@ def getHists(tin,tinmc,postfix):
 #	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",100,0,6000)
 #	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",100,1000,6000)
 
-#        h_jeratio  = ROOT.TH1F("h_jeratio"+postfix,"; jet energy/0.5 M_{resonance}; N",50,0,1.5);
+        h_jeratio  = ROOT.TH1F("h_jeratio"+postfix,"; E_{jet}/E_{jet}^{true}; N",50,0.5,1.2);
 #	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",50,0,22000);
 #	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",50,0,22000)
 #	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",50,0,22000)
 
-        h_jeratio  = ROOT.TH1F("h_jeratio"+postfix,"; jet energy/0.5 M_{resonance}; N",50,0,2.0);
-	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",50,-15000,22000);
-	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",50,0,22000)
-	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",50,-15000,22000)
+#	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",50,-15000,22000);
+#	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",50,0,22000)
+#	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",50,-15000,22000)
 
 # 2HDM
-#	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",100,1000,3000);
-#	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",100,0,3000)
-#	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",100,1000,3000)
+#       h_jeratio  = ROOT.TH1F("h_jeratio"+postfix,"; jet energy/0.5 M_{resonance}; N",50,0.2,1.2);
+	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",100,1000,3000);
+	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",100,0,3000)
+	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",100,1000,3000)
 
         h_jeratio.SetNdivisions(5);
         h_je.SetNdivisions(5);
@@ -104,8 +104,10 @@ def getHists(tin,tinmc,postfix):
 
             for n in range(len(tin.jpt)):
                 if tin.jisleptag[n]==0 and abs(tin.jeta[n])<1.1:
-                    if tinmc.gen_mZp > 0.001:
-                        h_jeratio.Fill( tin.je[n]*2/tinmc.gen_mZp)
+                    for k in range(len(tinmc.jpt)):
+                        dr = math.sqrt( (tin.jphi[n]-tinmc.jphi[k])*(tin.jphi[n]-tinmc.jphi[k]) + (tin.jeta[n]-tinmc.jeta[k])*(tin.jeta[n]-tinmc.jeta[k]) )
+                        if dr<0.1:
+                            h_jeratio.Fill( tin.je[n]/tinmc.je[k])
                     h_je.Fill( tin.je[n] )
                     h_jpt.Fill( tin.jpt[n] )
                     h_jp.Fill( tin.jp[n] )				
@@ -181,19 +183,20 @@ if __name__ == '__main__':
         tmc = fa.Get("tMC")
 
         print "Getting hists..."
-        hg = getHists(tg,tmc,'_gen')
-        hg_charged = getHists(tg_charged,tmc,'_gen_charged')
-        hg_nonu    = getHists(tg_nonu,tmc,'_gen_nonu')
-        hg_response = getHists(tg_response, tmc,'_gen_response')
-        hg_resolution = getHists(tg_resolution, tmc,'_gen_resolution')
+        hg = getHists(tg,tg,'_gen')
+        hg_charged = getHists(tg_charged,tg,'_gen_charged')
+        hg_nonu    = getHists(tg_nonu,tg,'_gen_nonu')
+        hg_response = getHists(tg_response, tg,'_gen_response')
+        hg_resolution = getHists(tg_resolution, tg,'_gen_resolution')
 
-        ha = getHists(ta,tmc,'_PF')
-        ht = getHists(tt,tmc,'_trk')	
-        hc = getHists(tc,tmc,'_calo')
+        ha = getHists(ta,tg,'_PF')
+        ht = getHists(tt,tg,'_trk')	
+        hc = getHists(tc,tg,'_calo')
 
         for i in range(len(ha)):
 #            makeCanvas( [hg[i],hg_charged[i],hg_nonu[i],ha[i],ht[i], hc[i]], ['gen','gen_charged','gen_nonu','pf','track (associated) ','calo (associated)'] )
             makeCanvas( [hg_nonu[i],hg_response[i],hg_charged[i],hg_resolution[i], hc[i]], 
+
                         ['gen_nonu','gen_nonu_response','gen_charged (+ #gamma)','gen_charged_response (+ #gamma)','calo (associated)'] )
 
         hmc = MCinfo(tmc);
