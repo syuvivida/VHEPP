@@ -82,17 +82,6 @@ for f in files:
 		nECB=colECB.getNumberOfElements();		
 		nHCB=colHCB.getNumberOfElements();
 
-#		print " ----------- ------------ ",nEvent
-#		print "number of particles = ", nMc, nPF, nTr
-		fileOutStatus1.write( '-99 0 0 0 0 \n' );
-		fileOutStatus3.write( '-99 0 0 0 0 \n' );
-		fileOutPanPFA.write( '-99 0 0 0 0 \n' );
-		fileOutPanPFA_Calo.write( '-99 0 0 0 0 \n' );
-		fileOutPanPFA_Tracks.write( '-99 0 0 0 0 \n' );
-		fileOutClusters.write( '-99 0 0 0 0 \n' );
-		fileOutTracks.write( '-99 0 0 0 0 \n' );
-                fileOutECaloR.write( '-99 0 0 0 0 \n' ); 
-                fileOutHCaloR.write( '-99 0 0 0 0 \n' ); 
 
                 ## First check if the event contains neutrinos
                 hasNeutrino = False
@@ -105,6 +94,18 @@ for f in files:
 #                print "event ", evt.getEventNumber()
                 if hasNeutrino and hadronic: continue
 #                print "event ", evt.getEventNumber()
+
+#		print " ----------- ------------ ",nEvent
+#		print "number of particles = ", nMc, nPF, nTr
+		fileOutStatus1.write( '-99 0 0 0 0 \n' );
+		fileOutStatus3.write( '-99 0 0 0 0 \n' );
+		fileOutPanPFA.write( '-99 0 0 0 0 \n' );
+		fileOutPanPFA_Calo.write( '-99 0 0 0 0 \n' );
+		fileOutPanPFA_Tracks.write( '-99 0 0 0 0 \n' );
+		fileOutClusters.write( '-99 0 0 0 0 \n' );
+		fileOutTracks.write( '-99 0 0 0 0 \n' );
+                fileOutECaloR.write( '-99 0 0 0 0 \n' ); 
+                fileOutHCaloR.write( '-99 0 0 0 0 \n' ); 
 
 		for i in range(nMc): # loop over all particles 
 			par=col.getElementAt(i)
