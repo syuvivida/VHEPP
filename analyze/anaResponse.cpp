@@ -71,6 +71,7 @@ ifstream finGEN_resolution;
 ifstream finCalo;
 ifstream finTrack;
 TRandom3* myrndm;
+std::vector<fastjet::PseudoJet> ISRPhotons;
 TH1F* heta_status3;
 TH1F* heta;
 TH1F* heta_after1;
@@ -305,6 +306,21 @@ int main (int argc, char **argv) {
  	    analyzeEvent( allParticlesGEN, jetRadius, allParticlesMC );
 	    tGEN->Fill();
 	
+ 	    clearVectors();
+ 	    analyzeEvent( allParticlesGEN_nonu, jetRadius, allParticlesMC );
+	    tGEN_nonu->Fill();
+	    
+ 	    clearVectors();
+ 	    analyzeEvent( allParticlesGEN_charged, jetRadius, allParticlesMC );
+	    tGEN_charged->Fill();
+ 
+ 	    clearVectors();
+ 	    analyzeEvent( allParticlesGEN_response, jetRadius, allParticlesMC );
+	    tGEN_response->Fill();
+
+ 	    clearVectors();
+ 	    analyzeEvent( allParticlesGEN_resolution, jetRadius, allParticlesMC );
+	    tGEN_resolution->Fill();
 
             clearVectors();
             analyzeEvent( allParticles, jetRadius, allParticlesMC );
@@ -317,22 +333,7 @@ int main (int argc, char **argv) {
             clearVectors();
 	    analyzeEvent( allParticlesTrack, jetRadius, allParticlesMC );
 	    ttrack->Fill();
-	    
- 	    clearVectors();
- 	    analyzeEvent( allParticlesGEN_charged, jetRadius, allParticlesMC );
-	    tGEN_charged->Fill();
- 
- 	    clearVectors();
- 	    analyzeEvent( allParticlesGEN_nonu, jetRadius, allParticlesMC );
-	    tGEN_nonu->Fill();
 
- 	    clearVectors();
- 	    analyzeEvent( allParticlesGEN_response, jetRadius, allParticlesMC );
-	    tGEN_response->Fill();
-
- 	    clearVectors();
- 	    analyzeEvent( allParticlesGEN_resolution, jetRadius, allParticlesMC );
-	    tGEN_resolution->Fill();
   
             analyzeMCEvent( allParticlesMC );
             tMC->Fill();
@@ -542,11 +543,10 @@ void readEventGEN_nonu( std::vector< fastjet::PseudoJet > &allParticles ){
         }        
  	int pdg=abs(pdgid);
   	if(pdg== 12 || pdg== 14 || pdg== 16){
-        if(finGEN_nonu.eof()) break;
- 	else
- 	  continue;
+	  if(finGEN_nonu.eof()) break;
+	  else
+	    continue;
 	}
-	//	std::cout << pdg << std::endl;
         // fill vector of pseudojets
         fastjet::PseudoJet curPseudoJet( px, py, pz, e );
         curPseudoJet.set_user_index(pdgid);
@@ -823,6 +823,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     if(counter%8==0)
       for(unsigned int i=0; i < particles.size(); i++)
 	heta_after1->Fill(particles[i].eta());
+      
 
     int activeAreaRepeats = 1;
     double ghostArea = 0.01;
@@ -837,18 +838,28 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     std::vector<fastjet::PseudoJet> out_jets = sorted_by_pt(thisClustering->inclusive_jets(25.0));
  
     if(counter%8==0)
-      for (unsigned int i = 0; i < out_jets.size() ; i++)
-	{
-	  heta_after2->Fill(out_jets[i].eta());
-	  hy->Fill(out_jets[i].rapidity());
-	}
+      {
+	for (unsigned int i = 0; i < out_jets.size() ; i++)
+	  {
+	    heta_after2->Fill(out_jets[i].eta());
+	    hy->Fill(out_jets[i].rapidity());
+	  }
 
-    else if(counter%8==1)
+	ISRPhotons.clear();	
+	for (unsigned int i = 0; i < out_jets.size() ; i++)
+	  {
+	    if(out_jets[i].constituents().size()!=1)continue;
+	    if(out_jets[i].constituents()[0].user_index()!=22)continue;
+	    ISRPhotons.push_back(out_jets[i]);	    	    
+	  }
+	
+      }
+
+    else if(counter%8==5)
       for (unsigned int i = 0; i < out_jets.size() ; i++)
 	heta_PF->Fill(out_jets[i].eta());
 
 
-    counter++;    
 
 
     double beta_sd = 1.0;
@@ -857,31 +868,75 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     fastjet::contrib::SoftDrop soft_drop_mmdt(0.0, zcut_sd, mu_sd);
 
     njets = out_jets.size();
-//       std::cout << "number of high pT jets = " << njets << std::endl;
-    // take only the two leading jets for Z' and H2 decays
-    for (unsigned int i = 0; i < out_jets.size() && i < 2; i++){
 
-        double isleptag = 0;
-        double minDR = 9999.;
-        for (unsigned int j = 0; j < MCparticles.size(); j++){
-            // std::cout << "MCparticles = " << MCparticles[j].pt() << "," << MCparticles[j].user_index() << std::endl;
-            double pdgid =  fabs(MCparticles[j].user_index());
-            double dr = sqrt( pow(MCparticles[j].phi()-out_jets[i].phi(),2) + pow(MCparticles[j].eta()-out_jets[i].eta(),2) );
-            // std::cout << "dr = " << dr << "," << pdgid << std::endl;
-            if (minDR > dr && (fabs(pdgid)==11 || fabs(pdgid)==13 || fabs(pdgid)==15) ){ minDR = dr; }
-        }
-        if (minDR < jetRadius){ isleptag = 1.; }
-	je.push_back( out_jets[i].E() );
-        jpt.push_back( out_jets[i].pt() );
-        jp.push_back( sqrt(out_jets[i].modp2()) );
-        jeta.push_back( out_jets[i].eta() );
-        jphi.push_back( out_jets[i].phi() );
-        jmass.push_back( out_jets[i].m() );  
-	jmass_sd.push_back( soft_drop_mmdt( out_jets.at(i) ).m() );        
-        jmultiplicity.push_back( (float) out_jets.at(i).constituents().size() );
-        jisleptag.push_back( isleptag );
+    // take only the two leading jets for Z' and H2 decays
+    int numGoodJets=0;
+
+    for (unsigned int i = 0; i < out_jets.size() && numGoodJets<2; i++){
+
+      // check if this jet is matched to an ISR photon
+      bool isISRPhoton=false;
+      for(unsigned int k =0; k < ISRPhotons.size(); k++){
+	
+	double dr = sqrt( pow(ISRPhotons[k].phi()-out_jets[i].phi(),2) + pow(ISRPhotons[k].eta()-out_jets[i].eta(),2) );
+	double Eratio = ISRPhotons[k].E()>1e-6? out_jets[i].E()/ISRPhotons[k].E(): -1;
+	if(dr < 0.1 && Eratio > 0.7 && Eratio < 1.3)
+	  {
+	    isISRPhoton=true;
+	    break;
+	  }
+      
+      }
+      
+      if(isISRPhoton)continue;
+      numGoodJets++;
+
+//       if(counter%8==1){
+// 	std::cout << endl;
+// 	std::cout << "in the same event : " << std::endl;
+	
+// 	std::cout << "jet " << i << ": " << out_jets[i].px() << ", " << out_jets[i].py() << ", " << out_jets[i].pz() << "," << out_jets[ \
+// 																	i].E() << "\t" << out_jets[i].eta() << endl;
+// 	std::cout << "constituent:" << std::endl;
+//        for(unsigned int k=0;k< out_jets[i].constituents().size(); k++)
+// 	 {
+	   
+// 	   std::cout << out_jets[i].constituents()[k].user_index() << ", "
+// 		     << out_jets[i].constituents()[k].px() << ", "
+// 		     << out_jets[i].constituents()[k].py() << ", "
+// 		     << out_jets[i].constituents()[k].pz() << ", "
+// 		     << out_jets[i].constituents()[k].e() << std::endl;
+// 	 }
+//       }
+	
+//       std::cout << endl;
+      
+
+
+      double isleptag = 0;
+      double minDR = 9999.;
+      for (unsigned int j = 0; j < MCparticles.size(); j++){
+	// std::cout << "MCparticles = " << MCparticles[j].pt() << "," << MCparticles[j].user_index() << std::endl;
+	double pdgid =  fabs(MCparticles[j].user_index());
+	double dr = sqrt( pow(MCparticles[j].phi()-out_jets[i].phi(),2) + pow(MCparticles[j].eta()-out_jets[i].eta(),2) );
+	// std::cout << "dr = " << dr << "," << pdgid << std::endl;
+	if (minDR > dr && (fabs(pdgid)==11 || fabs(pdgid)==13 || fabs(pdgid)==15) ){ minDR = dr; }
+      }
+      if (minDR < jetRadius){ isleptag = 1.; }
+      je.push_back( out_jets[i].E() );
+      jpt.push_back( out_jets[i].pt() );
+      jp.push_back( sqrt(out_jets[i].modp2()) );
+      jeta.push_back( out_jets[i].eta() );
+      jphi.push_back( out_jets[i].phi() );
+      jmass.push_back( out_jets[i].m() );  
+      jmass_sd.push_back( soft_drop_mmdt( out_jets.at(i) ).m() );        
+      jmultiplicity.push_back( (float) out_jets.at(i).constituents().size() );
+      jisleptag.push_back( isleptag );
       
     }
+
+    counter++;    
+
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles){
