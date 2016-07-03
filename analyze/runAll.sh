@@ -2,6 +2,10 @@
 ./anaResponse ../data/tev5mumu_mg5_2HDMexovv_rfull006_dat_includeNeutrino 0.8
 ./anaResponse ../data/tev5mumu_mg5_2HDMexovv_rfull006_dat_includeNeutrino 1.5
 
+./anaResponse ../data/tev10mumu_pythia6_zprime10tev_ww_dat_onlyhadronic 0.4
+./anaResponse ../data/tev10mumu_pythia6_zprime10tev_ww_dat_onlyhadronic 0.8
+./anaResponse ../data/tev10mumu_pythia6_zprime10tev_ww_dat_onlyhadronic 1.5
+
 ./anaResponse ../data/tev40mumu_pythia6_zprime5tev_wwrfull006_onlyhadronic 0.4
 ./anaResponse ../data/tev40mumu_pythia6_zprime5tev_wwrfull006_onlyhadronic 0.8
 ./anaResponse ../data/tev40mumu_pythia6_zprime5tev_wwrfull006_onlyhadronic 1.5
