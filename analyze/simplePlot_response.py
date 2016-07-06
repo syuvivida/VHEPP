@@ -16,6 +16,15 @@ tdrstyle.setTDRStyle()
 ROOT.gStyle.SetPadRightMargin(0.15)
 ROOT.gStyle.SetPalette(1)
 
+
+## Obtain FWHM
+
+def FWHM(hist):
+    bin1 = hist.FindFirstBinAbove(hist.GetMaximum()/2);
+    bin2 = hist.FindLastBinAbove(hist.GetMaximum()/2);
+    fwhm = hist.GetBinCenter(bin2) - hist.GetBinCenter(bin1);
+    return fwhm
+
 ## Making final figures and setup final display
 
 def makeCanvas(sample, hists, tags):
@@ -25,7 +34,7 @@ def makeCanvas(sample, hists, tags):
 #        leg = ROOT.TLegend(0.4,0.6,0.8,0.9)
 #    else:
     if hists[0].GetName() == "h_jeratio_gen_nonu":
-        leg = ROOT.TLegend(0.18,0.5,0.8,0.9)
+        leg = ROOT.TLegend(0.18,0.4,0.8,0.9)
     elif (sample =='1' or sample =='2' or sample =='3' or sample =='4') and (hists[0].GetName() == "h_jp_gen_nonu" or hists[0].GetName() == "h_jpt_gen_nonu" or hists[0].GetName() == "h_je_gen_nonu"):
         leg = ROOT.TLegend(0.45,0.6,0.85,0.9)
     else:
@@ -39,8 +48,10 @@ def makeCanvas(sample, hists, tags):
     for i in range(len(hists)):
         if hists[0].GetName() == "h_jeratio_gen_nonu":
             tagname="RMS = " + "{:.3f}".format(hists[i].GetRMS())
+            tagname2="FWHM = " + "{:.3f}".format(FWHM(hists[i]))
             leg.AddEntry(hists[i],tags[i],'l')
             leg.AddEntry(None, tagname,'')
+            leg.AddEntry(None, tagname2,'')
         else:
             leg.AddEntry(hists[i],tags[i],'l')
         if hists[i].GetMaximum() > tmax:
@@ -80,7 +91,7 @@ def getHists(sample,tin,tinmc,postfix):
     titlejmass = "; jet mass [GeV]; N"
     titlejsd   = "; soft drop mass (#beta = 0) [GeV]; N"
 
-    h_jeratio  = ROOT.TH1F("h_jeratio"+postfix, titleratio, 50,0.5,1.2)
+    h_jeratio  = ROOT.TH1F("h_jeratio"+postfix, titleratio, 50,0.6,1.1)
 
 # 2HDM
     if sample =='0':
@@ -242,7 +253,6 @@ if __name__ == '__main__':
     hc = getHists(sample,tc,tg,'_calo')
 
     for i in range(len(ha)):
-#            makeCanvas( [hg[i],hg_charged[i],hg_nonu[i],ha[i],ht[i], hc[i]], ['gen','gen_charged','gen_nonu','pf','track (associated) ','calo (associated)'] )
         makeCanvas( sample, [hg_nonu[i],hg_response[i],hg_charged[i],hg_resolution[i], hc[i]],                         
                     ['gen (no #nu)','gen response (no #nu)','gen (charged + #gamma)','gen response (charged+ #gamma)','calo (associated)'] )
 
