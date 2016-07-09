@@ -43,6 +43,7 @@ void jetResponse(string inputDir, float radius=0.4){
     h_jebin[i] = (TH1F*)h_je->Clone(Form("h_jebin%d",i));
   }
   string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_of_PanPFA.root";
+  cout << "opening " << inputFile.data() << endl;
   TreeReader genTree(inputFile.data(),"tGEN");
   TreeReader caloTree(inputFile.data(),"tcalo");
 
@@ -97,9 +98,9 @@ void jetResponse(string inputDir, float radius=0.4){
   TFile* outFile = new TFile(Form("radius%.1f_jetresponse.root",radius),"recreate");
   h_jeratio->Write();
   float x[nbins];
-  float y1[nbins];
+  float y1[nbins], y1err[nbins];
   float y2[nbins];
-  float y3[nbins];
+  float y3[nbins], y3err[nbins];
   float y4[nbins];
   float y5[nbins], y5err[nbins];
   float y6[nbins], y6err[nbins];
@@ -108,24 +109,35 @@ void jetResponse(string inputDir, float radius=0.4){
   for(unsigned int i=0; i<nbins; i++){
     h_jeratiobin[i] ->Write();
     h_jebin[i]->Write();
-    xerr[i] = h_je->GetBinWidth(i+1)*0.5;
+
     x[i]  = h_je->GetBinCenter(i+1);
+    xerr[i] = h_je->GetBinWidth(i+1)*0.5;
+
     y1[i] = h_jeratiobin[i]->GetRMS();
+    y1err[i] = h_jeratiobin[i]->GetRMS()/sqrt(2*h_jeratiobin[i]->GetEntries());
+
     y2[i] = FWHM(h_jeratiobin[i]);
+
     y3[i] = h_jeratiobin[i]->GetMean();
+    y3err[i] = h_jeratiobin[i]->GetRMS()/sqrt(h_jeratiobin[i]->GetEntries());
+
     y4[i] = h_jeratiobin[i]->GetBinCenter(h_jeratiobin[i]->GetMaximumBin());
-    cout << "RMS = " << y1[i] << endl;
+
+    cout << "RMS = " << y1[i] << " +- " << y1err[i] << endl;
     cout << "FWHM= " << y2[i] << endl;
+
     h_jeratiobin[i]->Fit("gaus");
     TF1 *myfunc = h_jeratiobin[i]->GetFunction("gaus");
+
     y5[i]    = myfunc->GetParameter(1);
     y5err[i] = myfunc->GetParError(1);
+
     y6[i]    = myfunc->GetParameter(2);
     y6err[i] = myfunc->GetParError(2);
 
   }
 
-  TGraph* gr_RMS = new TGraph(nbins,x,y1);
+  TGraphErrors* gr_RMS = new TGraphErrors(nbins,x,y1,xerr,y1err);
   gr_RMS->SetName("gr_RMS");
   gr_RMS->SetTitle("");
   gr_RMS->GetXaxis()->SetTitle("E_{true} [GeV]");
@@ -155,7 +167,7 @@ void jetResponse(string inputDir, float radius=0.4){
   gr_FWHM->GetYaxis()->SetTitleOffset(1.2);
   gr_FWHM->GetYaxis()->SetDecimals();
 
-  TGraph* gr_Mean = new TGraph(nbins,x,y3);
+  TGraphErrors* gr_Mean = new TGraphErrors(nbins,x,y3,xerr,y3err);
   gr_Mean->Draw("ACP");
   gr_Mean->SetTitle("");
   gr_Mean->SetName("gr_Mean");
