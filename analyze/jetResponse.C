@@ -30,14 +30,14 @@ void jetResponse(string inputDir, float radius=0.4){
 
   TH1F* h_jeratio = new TH1F("h_jeratio", "", 50,0.6,1.1);
   h_jeratio->SetXTitle("E_{jet}/E_{true}");
-
-  const int nbins=8;
+  
+  const int nbins=4;
   TH1F* h_jeratiobin[nbins];
   for(unsigned int i=0; i<nbins; i++){
     h_jeratiobin[i] = (TH1F*)h_jeratio->Clone(Form("h_jeratiobin%d",i));
   }
 
-  TH1F* h_je = new TH1F("h_je","",nbins,0,20000);
+  TH1F* h_je = new TH1F("h_je","",nbins,2500,22500);
   TH1F* h_jebin[nbins];
   for(unsigned int i=0; i<nbins; i++){
     h_jebin[i] = (TH1F*)h_je->Clone(Form("h_jebin%d",i));
@@ -84,10 +84,11 @@ void jetResponse(string inputDir, float radius=0.4){
       if(findGenMatch<0)continue;
       h_jeratio->Fill(calo_je[i]/gen_je[findGenMatch]);
       int bin = h_je->FindBin(gen_je[findGenMatch]);
+      if(bin==0)continue;
       if(bin>nbins)bin=nbins;
       bin=bin-1;
-      h_jeratiobin[bin]->Fill(calo_je[i]/gen_je[findGenMatch]);
       h_jebin[bin]->Fill(gen_je[findGenMatch]);
+      h_jeratiobin[bin]->Fill(calo_je[i]/gen_je[findGenMatch]);
     }
   }
       
