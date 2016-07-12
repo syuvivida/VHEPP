@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <numeric>  
 #include <TString.h>
 #include <TH1D.h>
 #include <TFile.h>
@@ -14,7 +15,7 @@
 #include <TF1.h>
 
 using namespace std;
-
+const float removal=0.1;
 
 float FWHM(TH1F* hist)
 {
@@ -27,15 +28,16 @@ float FWHM(TH1F* hist)
 
 void jetResponse(string inputDir, float radius=0.4){
 
-
-  TH1F* h_jeratio = new TH1F("h_jeratio", "", 50,0.6,1.1);
+  const float xmin=0.6;
+  const float xmax=1.1;
+  TH1F* h_jeratio = new TH1F("h_jeratio", "", 50,xmin,xmax);
   h_jeratio->SetXTitle("E_{jet}/E_{true}");
   
   const int nbins=4;
   TH1F* h_jeratiobin[nbins];
-  for(unsigned int i=0; i<nbins; i++){
+  for(unsigned int i=0; i<nbins; i++)
     h_jeratiobin[i] = (TH1F*)h_jeratio->Clone(Form("h_jeratiobin%d",i));
-  }
+  
 
   TH1F* h_je = new TH1F("h_je","",nbins,2500,22500);
   TH1F* h_jebin[nbins];
@@ -46,6 +48,9 @@ void jetResponse(string inputDir, float radius=0.4){
   cout << "opening " << inputFile.data() << endl;
   TreeReader genTree(inputFile.data(),"tGEN");
   TreeReader caloTree(inputFile.data(),"tcalo");
+
+
+  vector<float> jeratio_vec[nbins];
 
   for(Long64_t jEntry=0; jEntry< genTree.GetEntriesFast() ;jEntry++){
 
@@ -82,16 +87,36 @@ void jetResponse(string inputDir, float radius=0.4){
       }
 
       if(findGenMatch<0)continue;
-      h_jeratio->Fill(calo_je[i]/gen_je[findGenMatch]);
+      float ratio=calo_je[i]/gen_je[findGenMatch];
+      h_jeratio->Fill(ratio);
       int bin = h_je->FindBin(gen_je[findGenMatch]);
       if(bin==0)continue;
       if(bin>nbins)bin=nbins;
       bin=bin-1;
       h_jebin[bin]->Fill(gen_je[findGenMatch]);
-      h_jeratiobin[bin]->Fill(calo_je[i]/gen_je[findGenMatch]);
-    }
-  }
+      h_jeratiobin[bin]->Fill(ratio);
+      if(ratio>=xmin && ratio<=xmax)
+	jeratio_vec[bin].push_back(ratio);
+    } // end of loop over calo jets
+  } // end loop of tries
       
+
+  // sort the vector of jeratio first
+  for(unsigned int i=0; i<nbins; i++)
+    std::sort(jeratio_vec[i].begin(),jeratio_vec[i].end());
+
+  // erase elements in the vectors
+  for(unsigned int i=0; i<nbins; i++)
+    {
+      unsigned int size_temp = jeratio_vec[i].size();
+      unsigned int n_temp_to_be_removed = removal*0.5*size_temp;
+      // remove the first 5%
+      jeratio_vec[i].erase(jeratio_vec[i].begin(),jeratio_vec[i].begin()+n_temp_to_be_removed);
+      // remove the last 5%
+      jeratio_vec[i].erase(jeratio_vec[i].end()-n_temp_to_be_removed,jeratio_vec[i].end());
+    }
+
+
   h_jeratio->Draw();
   cout << "RMS = " << h_jeratio->GetRMS() << endl;
   cout << "FWHM= " << FWHM(h_jeratio) << endl;
@@ -107,20 +132,37 @@ void jetResponse(string inputDir, float radius=0.4){
   float y6[nbins], y6err[nbins];
   float xerr[nbins];
 
+  TH1F* h_Mean = (TH1F*)h_je->Clone("h_Mean");
+  h_Mean->Reset();
+  TH1F* h_RMS = (TH1F*)h_je->Clone("h_RMS");
+  h_RMS->Reset();
+
+
+  TH1F* h_Mean90 = (TH1F*)h_je->Clone("h_Mean90");
+  h_Mean90->Reset();
+  TH1F* h_RMS90 = (TH1F*)h_je->Clone("h_RMS90");
+  h_RMS90->Reset();
+
+  
   for(unsigned int i=0; i<nbins; i++){
-    h_jeratiobin[i] ->Write();
+    h_jeratiobin[i]  ->Write();
     h_jebin[i]->Write();
 
     x[i]  = h_je->GetBinCenter(i+1);
     xerr[i] = h_je->GetBinWidth(i+1)*0.5;
 
     y1[i] = h_jeratiobin[i]->GetRMS();
-    y1err[i] = h_jeratiobin[i]->GetRMS()/sqrt(2*h_jeratiobin[i]->GetEntries());
+    y1err[i] = h_jeratiobin[i]->GetRMSError();
+
+    h_RMS->SetBinContent(i+1,y1[i]);
+    h_RMS->SetBinError(i+1,y1err[i]);
 
     y2[i] = FWHM(h_jeratiobin[i]);
 
     y3[i] = h_jeratiobin[i]->GetMean();
-    y3err[i] = h_jeratiobin[i]->GetRMS()/sqrt(h_jeratiobin[i]->GetEntries());
+    y3err[i] = h_jeratiobin[i]->GetMeanError();
+    h_Mean->SetBinContent(i+1,y3[i]);
+    h_Mean->SetBinError(i+1,y3err[i]);
 
     y4[i] = h_jeratiobin[i]->GetBinCenter(h_jeratiobin[i]->GetMaximumBin());
 
@@ -136,7 +178,62 @@ void jetResponse(string inputDir, float radius=0.4){
     y6[i]    = myfunc->GetParameter(2);
     y6err[i] = myfunc->GetParError(2);
 
+
+    // getting mean90 and rms90
+    double nsamples = jeratio_vec[i].size();
+    double sum = std::accumulate(jeratio_vec[i].begin(), jeratio_vec[i].end(), 0.0);
+    double mean90 = sum / nsamples;
+    
+    double sq_sum = std::inner_product(jeratio_vec[i].begin(), jeratio_vec[i].end(), jeratio_vec[i].begin(), 0.0);
+    double RMS90 = std::sqrt(sq_sum / nsamples - mean90 * mean90);
+
+
+    h_Mean90->SetBinContent(i+1,mean90);
+    h_Mean90->SetBinError(i+1, RMS90/sqrt(nsamples));
+
+    h_RMS90->SetBinContent(i+1,RMS90);
+    h_RMS90->SetBinError(i+1, RMS90/sqrt(2*nsamples));
+
   }
+
+  h_Mean->SetMarkerStyle(8);
+  h_Mean->SetMarkerSize(1);
+  h_Mean->GetXaxis()->SetTitle("E_{true} [GeV]");
+  h_Mean->GetYaxis()->SetTitle("Mean of E_{jet}/E_{true}");
+  h_Mean->GetXaxis()->SetNdivisions(5);
+  h_Mean->GetYaxis()->SetTitleOffset(1.6);
+  h_Mean->GetYaxis()->SetDecimals();
+  h_Mean->Write();
+
+  h_RMS->SetMarkerStyle(8);
+  h_RMS->SetMarkerSize(1);
+  h_RMS->GetXaxis()->SetTitle("E_{true} [GeV]");
+  h_RMS->GetYaxis()->SetTitle("RMS of E_{jet}/E_{true}");
+  h_RMS->GetXaxis()->SetNdivisions(5);
+  h_RMS->GetYaxis()->SetTitleOffset(1.9);
+  h_RMS->GetYaxis()->SetDecimals();
+  h_RMS->Write();
+
+
+
+  h_Mean90->SetMarkerStyle(8);
+  h_Mean90->SetMarkerSize(1);
+  h_Mean90->GetXaxis()->SetTitle("E_{true} [GeV]");
+  h_Mean90->GetYaxis()->SetTitle("Mean^{90} of E_{jet}/E_{true}");
+  h_Mean90->GetXaxis()->SetNdivisions(5);
+  h_Mean90->GetYaxis()->SetTitleOffset(1.6);
+  h_Mean90->GetYaxis()->SetDecimals();
+  h_Mean90->Write();
+
+  h_RMS90->SetMarkerStyle(8);
+  h_RMS90->SetMarkerSize(1);
+  h_RMS90->GetXaxis()->SetTitle("E_{true} [GeV]");
+  h_RMS90->GetYaxis()->SetTitle("RMS^{90} of E_{jet}/E_{true}");
+  h_RMS90->GetXaxis()->SetNdivisions(5);
+  h_RMS90->GetYaxis()->SetTitleOffset(1.9);
+  h_RMS90->GetYaxis()->SetDecimals();
+  h_RMS90->Write();
+
 
   TGraphErrors* gr_RMS = new TGraphErrors(nbins,x,y1,xerr,y1err);
   gr_RMS->SetName("gr_RMS");
@@ -179,7 +276,6 @@ void jetResponse(string inputDir, float radius=0.4){
   gr_Mean->GetXaxis()->SetTitleSize(0.05);
   gr_Mean->GetYaxis()->SetTitleSize(0.05);
   gr_Mean->GetXaxis()->SetNdivisions(5);
-//   gr_Mean->GetXaxis()->SetTitleOffset(1.2);
   gr_Mean->GetYaxis()->SetTitleOffset(1.2);
   gr_Mean->GetYaxis()->SetDecimals();
 

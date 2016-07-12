@@ -49,17 +49,27 @@ void plotAllGraphs()
   c1->Print("RMSFit.gif");
   c1->Clear();
 
+  h_RMS90->Fit("f1");
+  c1->Print("RMS90Fit.pdf");
+  c1->Print("RMS90Fit.gif");
+  c1->Clear();
+
 
   TF1* f2 = new TF1("f2","[0]*(1-[1]*exp(-x/[2]))");
   f2->SetNpx(2500);
   f2->SetParameters(1,1,5000);
-  h_Mean->Fit("f2");
   gStyle->SetStatX(0.90);
   gStyle->SetStatY(0.37);
-  h_Mean->Fit("f2");
 
+
+  h_Mean->Fit("f2");
   c1->Print("MeanFit.pdf");
   c1->Print("MeanFit.gif");
+  c1->Clear();
+
+  h_Mean90->Fit("f2");
+  c1->Print("Mean90Fit.pdf");
+  c1->Print("Mean90Fit.gif");
   c1->Clear();
 
   
