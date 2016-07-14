@@ -14,28 +14,42 @@ from jhplot import *  # import graphics
 from hephysics.particle import LParticle
 import math
 import os
+import sys
 
 # make list of files..
 import glob
-files=glob.glob("/home/syu/muon_collider/single_pion_analog/rfull006/pgun_pi1000gev*.slcio")
+
+for arg in sys.argv: 
+    print arg
+
+
+
+filename = sys.argv[1]
+print filename
+outputtemp=filename
+directory=outputtemp.rsplit('/', 1)[1]
+print directory
+
+files = glob.glob(filename+"/*.slcio")
+
 factory = LCFactory.getInstance()
 reader = factory.createLCReader()
-directory = 'dat'
 if not os.path.exists(directory):
     os.makedirs(directory)
 else:
-	print 'the directory already exists! rememebr to clean up your work area'
-	quit()
+    print 'the directory already exists! rememebr to clean up your work area'
+    quit()
 
-fileOutStatus1         = open('dat/of_status1.dat','w');
-fileOutStatus3         = open('dat/of_status3.dat','w');
-fileOutPanPFA          = open('dat/of_PanPFA.dat','w');
-fileOutPanPFA_Tracks   = open('dat/of_PanPFA_Tracks.dat','w');
-fileOutPanPFA_Calo     = open('dat/of_PanPFA_Calo.dat','w');
-fileOutClusters        = open('dat/of_CaloClusters.dat','w');
-fileOutTracks          = open('dat/of_Tracks.dat','w');
-fileOutECaloR          = open('dat/of_ECaloHits_r.dat','w');
-fileOutHCaloR          = open('dat/of_HCaloHits_r.dat','w');
+fileOutStatus1         = open(directory+'/of_status1.dat','w');
+fileOutStatus3         = open(directory+'/of_status3.dat','w');
+fileOutPanPFA          = open(directory+'/of_PanPFA.dat','w');
+fileOutPanPFA_Tracks   = open(directory+'/of_PanPFA_Tracks.dat','w');
+fileOutPanPFA_Calo     = open(directory+'/of_PanPFA_Calo.dat','w');
+fileOutClusters        = open(directory+'/of_CaloClusters.dat','w');
+fileOutTracks          = open(directory+'/of_Tracks.dat','w');
+fileOutECaloR          = open(directory+'/of_ECaloHits_r.dat','w');
+fileOutHCaloR          = open(directory+'/of_HCaloHits_r.dat','w');
+
 
 
 nEvent=0
