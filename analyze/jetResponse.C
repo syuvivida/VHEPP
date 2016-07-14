@@ -46,7 +46,7 @@ void jetResponse(string inputDir, float radius=0.4){
   }
   string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_of_PanPFA.root";
   cout << "opening " << inputFile.data() << endl;
-  TreeReader genTree(inputFile.data(),"tGEN");
+  TreeReader genTree(inputFile.data(),"tGEN_nonu");
   TreeReader caloTree(inputFile.data(),"tcalo");
 
 
