@@ -907,9 +907,9 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	  return;
 	}
 
-      TLorentzVector Wjet[2];
-      Wjet[0].SetPxPyPzE(0,0,0,0);
-      Wjet[1].SetPxPyPzE(0,0,0,0);
+      fastjet::PseudoJet Wjet[2];
+      Wjet[0].reset(0,0,0,0);
+      Wjet[1].reset(0,0,0,0);
       int nPart[2]={0,0};
       for(unsigned int i=0; i < particles.size(); i++)
 	{
@@ -920,24 +920,21 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	      if(dr > jetRadius)continue;
 
 	      nPart[iw]++;
-	      Wjet[iw] += TLorentzVector( particles[i].px(),
-					  particles[i].py(),
-					  particles[i].pz(),					 
-					  particles[i].e());
+	      Wjet[iw] += particles[i];
 	    }
 	}
 
 
       for(unsigned int iw=0; iw < 2; iw++)
 	{
-	  if(Wjet[iw].E()<1e-6)continue;
-	  je.push_back( Wjet[iw].E() );
-	  jpt.push_back( Wjet[iw].Pt() );
-	  jp.push_back( Wjet[iw].P() );
-	  jeta.push_back( Wjet[iw].Eta() );
-	  jphi.push_back( Wjet[iw].Phi() );
-	  jmass.push_back( Wjet[iw].M() );  
-	  jmass_sd.push_back( Wjet[iw].M() );        
+	  if(Wjet[iw].e()<1e-6)continue;
+	  je.push_back( Wjet[iw].e() );
+	  jpt.push_back( Wjet[iw].pt() );
+	  jp.push_back( sqrt(Wjet[iw].modp2()) );
+	  jeta.push_back( Wjet[iw].eta() );
+	  jphi.push_back( Wjet[iw].phi() );
+	  jmass.push_back( Wjet[iw].m() );  
+	  jmass_sd.push_back( Wjet[iw].m() );        
 	  jmultiplicity.push_back(nPart[iw]);
 	  jisleptag.push_back(0);
 	}
