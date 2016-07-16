@@ -53,8 +53,9 @@ void singleParticleResponse(string inputDir, float radius=0.4){
     Float_t*  calo_je = caloTree.GetPtrFloat("je");
     Float_t*  calo_jeta = caloTree.GetPtrFloat("jeta");
     Float_t*  calo_jphi = caloTree.GetPtrFloat("jphi");
+    Int_t      njets    = caloTree.GetInt("njets");
 
-    for(unsigned int i=0; i<2; i++){
+    for(unsigned int i=0; i< njets; i++){
 
       if(fabs(calo_jeta[i])>1.1)continue;
 
@@ -75,8 +76,7 @@ void singleParticleResponse(string inputDir, float radius=0.4){
       if(findGenMatch<0)continue;
       float ratio=calo_je[i]/gen_je[findGenMatch];
       h_jeratio->Fill(ratio);
-      if(ratio>=xmin && ratio<=xmax)
-	jeratio_vec.push_back(ratio);
+      jeratio_vec.push_back(ratio);
     } // end of loop over calo jets
   } // end loop of tries
       

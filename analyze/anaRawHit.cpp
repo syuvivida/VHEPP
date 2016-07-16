@@ -72,8 +72,8 @@ ifstream finTrack;
 ifstream finECalHits;
 ifstream finHCalHits;
 
-// ifstream finECalHits2;
-// ifstream finHCalHits2;
+ifstream finECalHits2;
+ifstream finHCalHits2;
 
 TRandom3* myrndm;
 std::vector<fastjet::PseudoJet> ISRPhotons;
@@ -115,13 +115,14 @@ void readEventGEN_nonu( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventGEN_response( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventRawHits( std::vector< fastjet::PseudoJet > &allParticles );
-// void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles );
+void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventTrack(  std::vector< fastjet::PseudoJet > &allParticles );
 
 void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles);
 void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles);
 void clearVectors(){
     //  INIT
+  njets = 0;
   je.clear();
   jpt.clear();
   jp.clear();    
@@ -156,7 +157,7 @@ int main (int argc, char **argv) {
     std::vector < fastjet::PseudoJet > allParticlesGEN_response; //gen scaled with single particle response
 
     std::vector < fastjet::PseudoJet > allParticlesRawHits; // calo hits
-//     std::vector < fastjet::PseudoJet > allParticlesRawHits2; // calo hits
+    std::vector < fastjet::PseudoJet > allParticlesRawHits2; // calo hits
 
 
     char fname[150];
@@ -180,11 +181,11 @@ int main (int argc, char **argv) {
 
     sprintf( fnameCalo, "%s/of_ECaloHits_r.dat", inputFolder.c_str());
     finECalHits.open(fnameCalo);
-//     finECalHits2.open(fnameCalo);
+    finECalHits2.open(fnameCalo);
 
     sprintf( fnameCalo, "%s/of_HCaloHits_r.dat", inputFolder.c_str());
     finHCalHits.open(fnameCalo);
-//     finHCalHits2.open(fnameCalo);
+    finHCalHits2.open(fnameCalo);
 
     char fnameTrack[150];
     sprintf( fnameTrack, "%s/%s_Tracks.dat", inputFolder.c_str(), type.c_str());
@@ -238,17 +239,17 @@ int main (int argc, char **argv) {
     trawhits->Branch("jmultiplicity"  , &jmultiplicity      );    
     trawhits->Branch("jisleptag"      , &jisleptag      );    
 
-//     TTree *trawhits2 = new TTree("trawhits2","Tree with vectors");
-//     trawhits2->Branch("njets"          , &njets      );
-//     trawhits2->Branch("je"             , &je         );
-//     trawhits2->Branch("jpt"            , &jpt        );
-//     trawhits2->Branch("jp"             , &jp        );      
-//     trawhits2->Branch("jeta"           , &jeta       );
-//     trawhits2->Branch("jphi"           , &jphi       );
-//     trawhits2->Branch("jmass"          , &jmass      );    
-//     trawhits2->Branch("jmass_sd"       , &jmass_sd      );    
-//     trawhits2->Branch("jmultiplicity"  , &jmultiplicity      );    
-//     trawhits2->Branch("jisleptag"      , &jisleptag      );    
+    TTree *trawhits2 = new TTree("trawhits2","Tree with vectors");
+    trawhits2->Branch("njets"          , &njets      );
+    trawhits2->Branch("je"             , &je         );
+    trawhits2->Branch("jpt"            , &jpt        );
+    trawhits2->Branch("jp"             , &jp        );      
+    trawhits2->Branch("jeta"           , &jeta       );
+    trawhits2->Branch("jphi"           , &jphi       );
+    trawhits2->Branch("jmass"          , &jmass      );    
+    trawhits2->Branch("jmass_sd"       , &jmass_sd      );    
+    trawhits2->Branch("jmultiplicity"  , &jmultiplicity      );    
+    trawhits2->Branch("jisleptag"      , &jisleptag      );    
 
 
 
@@ -319,7 +320,7 @@ int main (int argc, char **argv) {
         readEventMC( allParticlesMC );
         readEventCalo( allParticlesCalo );
 	readEventRawHits( allParticlesRawHits );
-// 	readEventRawHits2( allParticlesRawHits2 );
+ 	readEventRawHits2( allParticlesRawHits2 );
 	readEventTrack( allParticlesTrack);
 
         // std::cout << "size of collection = " << allParticles.size() << "," << allParticlesMC.size() << ", " << allParticlesCalo.size() << std::endl;
@@ -353,9 +354,9 @@ int main (int argc, char **argv) {
 	    analyzeEvent( allParticlesRawHits, jetRadius, allParticlesMC );
 	    trawhits->Fill();
 
-// 	    clearVectors();
-// 	    analyzeEvent( allParticlesRawHits2, jetRadius, allParticlesMC );
-// 	    trawhits2->Fill();
+	    clearVectors();
+ 	    analyzeEvent( allParticlesRawHits2, jetRadius, allParticlesMC );
+ 	    trawhits2->Fill();
   
             analyzeMCEvent( allParticlesMC );
             tMC->Fill();
@@ -369,12 +370,13 @@ int main (int argc, char **argv) {
         allParticlesCalo.clear();
         allParticlesTrack.clear();
 	allParticlesRawHits.clear();
-// 	allParticlesRawHits2.clear();
+ 	allParticlesRawHits2.clear();
 
         ctr++;
 	std::cout << "ctr = " << ctr << std::endl;
 
-        if(fin.eof()) break;
+	if(fin.eof()) break;
+	//	if(ctr==100)break;
     }
 
     f->cd();
@@ -388,7 +390,7 @@ int main (int argc, char **argv) {
     tPFA->Write();
     tcalo->Write();
     trawhits->Write();
-//     trawhits2->Write();
+    trawhits2->Write();
     ttrack->Write();
     tGEN->Write();
     tGEN_nonu->Write();
@@ -762,7 +764,6 @@ void readEventRawHits( std::vector< fastjet::PseudoJet > &allParticles ){
 }
 
 
-/*
 
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -841,7 +842,6 @@ void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles ){
     
 }
 
-*/
 
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -883,13 +883,13 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
   //    std::cout << "analyzing event..." << particles.size() << std::endl;
     double rParam = rVal;
     fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, rParam);    
-    if(counter%7==0)
+    if(counter%8==0)
       for(unsigned int i=0; i < particles.size(); i++)       
 	heta_after1->Fill(particles[i].eta());
       
 
     // doing my own clustering
-    if(counter%7==6){
+    if(counter%8==7){
       fastjet::PseudoJet w[2];
       for (unsigned int i = 0; i < MCparticles.size(); i++){
         double pdgid =  MCparticles[i].user_index();
@@ -939,7 +939,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	  jisleptag.push_back(0);
 	}
 
-    } // if counter%7==6
+    } // if counter%8==7
     else{
 
       int activeAreaRepeats = 1;
@@ -952,7 +952,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       fastjet::ClusterSequenceArea* thisClustering = new fastjet::ClusterSequenceArea(particles, jetDef, fjAreaDefinition);
       std::vector<fastjet::PseudoJet> out_jets = sorted_by_pt(thisClustering->inclusive_jets(25.0));
  
-      if(counter%7==0)
+      if(counter%8==0)
 	{
 	  for (unsigned int i = 0; i < out_jets.size() ; i++)
 	    {
@@ -970,7 +970,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	
 	}
 
-      else if(counter%7==3)
+      else if(counter%8==3)
 	for (unsigned int i = 0; i < out_jets.size() ; i++)
 	  heta_PF->Fill(out_jets[i].eta());
 
@@ -982,7 +982,6 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       double mu_sd   = 1.0; // for mass drop, equivalent to no cut
       fastjet::contrib::SoftDrop soft_drop_mmdt(0.0, zcut_sd, mu_sd);
 
-      njets = out_jets.size();
 
       // take only the two leading jets for Z' and H2 decays
       int numGoodJets=0;
@@ -1029,7 +1028,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       }
 
     } // itcounter!=7
-
+    njets = numGoodJets;
     counter++;    
 
 }

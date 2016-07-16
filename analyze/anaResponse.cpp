@@ -113,6 +113,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles);
 void clearVectors(){
     //  INIT
+  njets = 0;
   je.clear();
   jpt.clear();
   jp.clear();    
@@ -867,7 +868,6 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     double mu_sd   = 1.0; // for mass drop, equivalent to no cut
     fastjet::contrib::SoftDrop soft_drop_mmdt(0.0, zcut_sd, mu_sd);
 
-    njets = out_jets.size();
 
     // take only the two leading jets for Z' and H2 decays
     int numGoodJets=0;
@@ -934,6 +934,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       jisleptag.push_back( isleptag );
       
     }
+    njets = numGoodJets;
 
     counter++;    
 
