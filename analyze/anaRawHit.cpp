@@ -1028,8 +1028,9 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       
       }
 
-    } // itcounter!=7
     njets = numGoodJets;
+
+    } // itcounter!=7
     counter++;    
 
 }
