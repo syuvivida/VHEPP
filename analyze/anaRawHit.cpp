@@ -928,6 +928,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       for(unsigned int iw=0; iw < 2; iw++)
 	{
 	  if(Wjet[iw].e()<1e-6)continue;
+	  njets++;
 	  je.push_back( Wjet[iw].e() );
 	  jpt.push_back( Wjet[iw].pt() );
 	  jp.push_back( sqrt(Wjet[iw].modp2()) );
