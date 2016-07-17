@@ -61,19 +61,23 @@ void jetResponse(string inputDir, float radius=0.4){
     Float_t*  gen_jeta = genTree.GetPtrFloat("jeta");
     Float_t*  gen_jphi = genTree.GetPtrFloat("jphi");
     Float_t*  gen_jislep = genTree.GetPtrFloat("jisleptag");
+    Int_t     gen_njets = genTree.GetInt("njets");
 
     Float_t*  calo_je = caloTree.GetPtrFloat("je");
     Float_t*  calo_jeta = caloTree.GetPtrFloat("jeta");
     Float_t*  calo_jphi = caloTree.GetPtrFloat("jphi");
     Float_t*  calo_jislep = caloTree.GetPtrFloat("jisleptag");
+    Int_t     calo_njets    = caloTree.GetInt("njets");
 
-    for(unsigned int i=0; i<2; i++){
+    for(unsigned int i=0; i< calo_njets; i++){
+
+      cout << jEntry << "\t" << calo_je[i] << "\t" << gen_je[i] << endl;
 
       if(fabs(calo_jeta[i])>1.1)continue;
       if(calo_jislep[i]>1e-6)continue;
 
       int findGenMatch=-1;
-      for(unsigned int k=0; k<2; k++){
+      for(unsigned int k=0; k< gen_njets; k++){
 	
 	
 	float dr = sqrt(pow(gen_jeta[k]-calo_jeta[i],2)+

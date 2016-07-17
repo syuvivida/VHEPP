@@ -46,21 +46,22 @@ void singleParticleResponse(string inputDir, float radius=0.4){
     genTree.GetEntry(jEntry);
     caloTree.GetEntry(jEntry);
 
-    Float_t*  gen_je = genTree.GetPtrFloat("je");
-    Float_t*  gen_jeta = genTree.GetPtrFloat("jeta");
-    Float_t*  gen_jphi = genTree.GetPtrFloat("jphi");
+    Float_t*  gen_je    = genTree.GetPtrFloat("je");
+    Float_t*  gen_jeta  = genTree.GetPtrFloat("jeta");
+    Float_t*  gen_jphi  = genTree.GetPtrFloat("jphi");
+    Int_t     gen_njets = genTree.GetInt("njets");
 
-    Float_t*  calo_je = caloTree.GetPtrFloat("je");
-    Float_t*  calo_jeta = caloTree.GetPtrFloat("jeta");
-    Float_t*  calo_jphi = caloTree.GetPtrFloat("jphi");
-    Int_t      njets    = caloTree.GetInt("njets");
+    Float_t*  calo_je    = caloTree.GetPtrFloat("je");
+    Float_t*  calo_jeta  = caloTree.GetPtrFloat("jeta");
+    Float_t*  calo_jphi  = caloTree.GetPtrFloat("jphi");
+    Int_t     calo_njets = caloTree.GetInt("njets");
 
-    for(unsigned int i=0; i< njets; i++){
+    for(unsigned int i=0; i< calo_njets; i++){
 
       if(fabs(calo_jeta[i])>1.1)continue;
 
       int findGenMatch=-1;
-      for(unsigned int k=0; k<2; k++){
+      for(unsigned int k=0; k< gen_njets; k++){
 	
 	
 	float dr = sqrt(pow(gen_jeta[k]-calo_jeta[i],2)+
