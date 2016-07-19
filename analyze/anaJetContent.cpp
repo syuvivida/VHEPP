@@ -51,19 +51,28 @@ ifstream finGEN_nonu;
 std::vector<fastjet::PseudoJet> ISRPhotons;
 std::map<unsigned int, std::string> PDGIDs;
 
-
-TH1F* hjeratio[2300]; 
+const int nparts=2300;
+const int lastp = nparts-1;
+TH1F* hjeratio[nparts]; 
 
 
 float jetRadius;
 const float etamax=99999.0;
 //const float etamax=1.1;
 
+
+vector<float> trueje;
+vector<float> jeratio[nparts];
+
 ////////////////////-----------------------------------------------
 typedef std::map<unsigned int,std::string>::iterator it_type;
 
 void readEventGEN_nonu( std::vector< fastjet::PseudoJet > &allParticles );
 void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal);
+void clearVectors(){
+  trueje.clear();
+  for(int i=0; i<nparts;i++)jeratio[i].clear();
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +102,7 @@ int main (int argc, char **argv) {
     hjeratio[iterator->first] = new TH1F(Form("h_jeratio_%s",iterator->second.data()), iterator->second.data(), 50,0,1);      
   }
 
-  hjeratio[2299] = new TH1F(Form("h_jeratio_others"), "Other particles", 50,0,1);      
+  hjeratio[lastp] = new TH1F(Form("h_jeratio_others"), "Other particles", 50,0,1);      
 
 
   // pick only the highest pt particle
@@ -109,6 +118,14 @@ int main (int argc, char **argv) {
   sprintf( outName, "%s/radius%.1f_%s.root", inputFolder.c_str(), jetRadius, type.c_str() );
   TFile *f = TFile::Open(outName,"RECREATE");
 
+  TTree *tGEN_nonu = new TTree("tGEN_nonu","Tree with vectors");
+  tGEN_nonu->Branch("trueje"         , &trueje      );
+  for(it_type iterator = PDGIDs.begin(); iterator != PDGIDs.end(); iterator++) 
+    tGEN_nonu->Branch(Form("jeratio_%s",iterator->second.data()), &jeratio[iterator->first]);
+  tGEN_nonu->Branch("jeratio_others", &jeratio[lastp]);
+ 
+
+
 
   int ctr = 0;
   while(true){
@@ -117,8 +134,11 @@ int main (int argc, char **argv) {
     
     // std::cout << "size of collection = " << allParticles.size() << "," << allParticlesMC.size() << ", " << allParticlesCalo.size() << std::endl;
     if (ctr > 0)
-      analyzeEvent( allParticlesGEN_nonu, jetRadius);
-    
+      {
+	clearVectors();
+	analyzeEvent( allParticlesGEN_nonu, jetRadius);
+	tGEN_nonu->Fill();
+      }
     allParticlesGEN_nonu.clear();
 
 	
@@ -131,7 +151,8 @@ int main (int argc, char **argv) {
   for(it_type iterator = PDGIDs.begin(); iterator != PDGIDs.end(); iterator++) 
     hjeratio[iterator->first]->Write();
   
-  hjeratio[2299]->Write();
+  hjeratio[lastp]->Write();
+  tGEN_nonu->Write();
   
 
   f->cd();
@@ -217,7 +238,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal){
 
   for (unsigned int i = 0; i < out_jets.size() && numGoodJets<2; i++){
 
-    float je[2300]={0.};
+    float je[nparts]={0.};
 
     // check if this jet is matched to an ISR photon
     bool isISRPhoton=false;
@@ -245,19 +266,27 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal){
 	if(PDGIDs.find(pdg) != PDGIDs.end())
 	  je[pdg] += out_jets[i].constituents()[ip].e();
 	else
-	  je[2299] += out_jets[i].constituents()[ip].e();
+	  je[lastp] += out_jets[i].constituents()[ip].e();
       }
     
     
     float sume=0;
     for(it_type iterator = PDGIDs.begin(); iterator != PDGIDs.end(); iterator++) {
-      hjeratio[iterator->first]->Fill(je[iterator->first]/out_jets[i].e());
+
+      float r = je[iterator->first]/out_jets[i].e();
+      hjeratio[iterator->first]->Fill(r);
+      jeratio[iterator->first].push_back(r);
       sume += je[iterator->first];
       //      std::cout << "energy of " << iterator->second << " = " << je[iterator->first] << std::endl;
     }
     //    std::cout << "sum e = " << sume << "\t jet energy = " << out_jets[i].e() << std::endl;
 
-    hjeratio[2299]->Fill(je[2299]/out_jets[i].e());
+    hjeratio[lastp]->Fill(je[lastp]/out_jets[i].e());
+    jeratio[lastp].push_back(je[lastp]/out_jets[i].e());
+
+    trueje.push_back(out_jets[i].e());
+
+
     numGoodJets++;   
   } // number of good jets < 2
 
