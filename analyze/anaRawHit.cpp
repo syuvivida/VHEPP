@@ -138,7 +138,7 @@ void clearVectors(){
 int main (int argc, char **argv) {
     
     // std::cout << "hello world" << std::endl;
-    std::string type = "of_PanPFA";   // type "gg" or "qq"
+    std::string type = "rawhit";   // type "gg" or "qq"
     std::string inputFolder = argv[1];
     jetRadius = (float)atof(argv[2]);
 
