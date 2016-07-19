@@ -63,6 +63,7 @@ const float etamax=99999.0;
 
 vector<float> trueje;
 vector<float> jeratio[nparts];
+unsigned int njets;
 
 ////////////////////-----------------------------------------------
 typedef std::map<unsigned int,std::string>::iterator it_type;
@@ -70,6 +71,7 @@ typedef std::map<unsigned int,std::string>::iterator it_type;
 void readEventGEN_nonu( std::vector< fastjet::PseudoJet > &allParticles );
 void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal);
 void clearVectors(){
+  njets = 0;
   trueje.clear();
   for(int i=0; i<nparts;i++)jeratio[i].clear();
 }
@@ -119,6 +121,7 @@ int main (int argc, char **argv) {
   TFile *f = TFile::Open(outName,"RECREATE");
 
   TTree *tGEN_nonu = new TTree("tGEN_nonu","Tree with vectors");
+  tGEN_nonu->Branch("njets", &njets);
   tGEN_nonu->Branch("trueje"         , &trueje      );
   for(it_type iterator = PDGIDs.begin(); iterator != PDGIDs.end(); iterator++) 
     tGEN_nonu->Branch(Form("jeratio_%s",iterator->second.data()), &jeratio[iterator->first]);
@@ -290,5 +293,6 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal){
     numGoodJets++;   
   } // number of good jets < 2
 
+  njets = numGoodJets;
 
 }
