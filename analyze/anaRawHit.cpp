@@ -138,7 +138,7 @@ void clearVectors(){
 int main (int argc, char **argv) {
     
     // std::cout << "hello world" << std::endl;
-    std::string type = "rawhit";   // type "gg" or "qq"
+    std::string type = "of_PanPFA";   // type "gg" or "qq"
     std::string inputFolder = argv[1];
     jetRadius = (float)atof(argv[2]);
 
@@ -192,7 +192,7 @@ int main (int argc, char **argv) {
     finTrack.open(fnameTrack);
 
     char outName[192];
-    sprintf( outName, "%s/radius%.1f_%s.root", inputFolder.c_str(), jetRadius, type.c_str() );
+    sprintf( outName, "%s/radius%.1f_rawhit.root", inputFolder.c_str(), jetRadius);
     TFile *f = TFile::Open(outName,"RECREATE");
 
     heta = new TH1F("heta","",200,-2.5,2.5);

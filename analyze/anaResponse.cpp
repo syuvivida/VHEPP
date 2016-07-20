@@ -94,6 +94,20 @@ std::vector<float> jmass;
 std::vector<float> jmultiplicity;
 std::vector<float> jisleptag;
 std::vector<float> jmass_sd;
+std::vector<float> jmass_pr;
+std::vector<float> costheta1;
+
+struct genHiggs
+{
+  TLorentzVector p4;
+  float cosTheta1;
+  TLorentzVector p4_b1;
+  TLorentzVector p4_b2;
+};
+
+
+genHiggs h_gen[2];
+
 float jetRadius;
 const float etamax=99999.0;
 //const float etamax=1.1;
@@ -109,6 +123,7 @@ void readEventGEN_resolution( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventTrack(  std::vector< fastjet::PseudoJet > &allParticles );
 
+void computeCosTheta1();
 void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles);
 void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles);
 void clearVectors(){
@@ -121,14 +136,40 @@ void clearVectors(){
   jphi.clear();        
   jmass.clear();
   jmass_sd.clear();        
+  jmass_pr.clear();        
   jmultiplicity.clear();
   jisleptag.clear();
+  costheta1.clear();
 }
+
+
+void computeCosTheta1()
+{
+  for(int i=0;i<2;i++){
+    if(h_gen[i].p4.E()<1e-6)return;
+    if(h_gen[i].p4_b1.E()<1e-6)return;
+    if(h_gen[i].p4_b2.E()<1e-6)return;
+  }
+  
+  for(int i=0; i<2;i++){
+
+    TLorentzVector thisB(h_gen[i].p4_b1);
+
+    thisB.Boost(-h_gen[i].p4.BoostVector());
+
+    float cos=TMath::Cos(thisB.Vect().Angle(h_gen[i].p4.Vect()));
+
+    h_gen[i].cosTheta1=cos;
+  }
+  return;
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char **argv) {
     
     // std::cout << "hello world" << std::endl;
-    std::string type = "response";   // type "gg" or "qq"
+    std::string type = "of_PanPFA";   // type "gg" or "qq"
     std::string inputFolder = argv[1];
     jetRadius = (float)atof(argv[2]);
 
@@ -174,7 +215,7 @@ int main (int argc, char **argv) {
     finTrack.open(fnameTrack);
 
     char outName[192];
-    sprintf( outName, "%s/radius%.1f_%s.root", inputFolder.c_str(), jetRadius, type.c_str() );
+    sprintf( outName, "%s/radius%.1f_response.root", inputFolder.c_str(), jetRadius);
     TFile *f = TFile::Open(outName,"RECREATE");
 
     heta = new TH1F("heta","",200,-2.5,2.5);
@@ -193,8 +234,10 @@ int main (int argc, char **argv) {
     tPFA->Branch("jphi"           , &jphi       );
     tPFA->Branch("jmass"          , &jmass      );    
     tPFA->Branch("jmass_sd"       , &jmass_sd      );    
+    tPFA->Branch("jmass_pr"       , &jmass_pr      );    
     tPFA->Branch("jmultiplicity"  , &jmultiplicity      );    
     tPFA->Branch("jisleptag"      , &jisleptag      );    
+    tPFA->Branch("costheta1"      , &costheta1      );    
 
     TTree *tcalo = new TTree("tcalo","Tree with vectors");
     tcalo->Branch("njets"          , &njets      );
@@ -205,8 +248,10 @@ int main (int argc, char **argv) {
     tcalo->Branch("jphi"           , &jphi       );
     tcalo->Branch("jmass"          , &jmass      );    
     tcalo->Branch("jmass_sd"       , &jmass_sd      );    
+    tcalo->Branch("jmass_pr"       , &jmass_pr      );    
     tcalo->Branch("jmultiplicity"  , &jmultiplicity      );    
     tcalo->Branch("jisleptag"      , &jisleptag      );    
+    tcalo->Branch("costheta1"      , &costheta1      );    
 
     TTree *ttrack = new TTree("ttrack","Tree with vectors");
     ttrack->Branch("njets"          , &njets      );
@@ -217,8 +262,10 @@ int main (int argc, char **argv) {
     ttrack->Branch("jphi"           , &jphi       );
     ttrack->Branch("jmass"          , &jmass      );    
     ttrack->Branch("jmass_sd"       , &jmass_sd      );    
+    ttrack->Branch("jmass_pr"       , &jmass_pr      );    
     ttrack->Branch("jmultiplicity"  , &jmultiplicity      );    
     ttrack->Branch("jisleptag"      , &jisleptag      );    
+    ttrack->Branch("costheta1"      , &costheta1      );    
 
     TTree *tGEN = new TTree("tGEN","Tree with vectors");
     tGEN->Branch("njets"          , &njets      );
@@ -229,8 +276,10 @@ int main (int argc, char **argv) {
     tGEN->Branch("jphi"           , &jphi       );
     tGEN->Branch("jmass"          , &jmass      );    
     tGEN->Branch("jmass_sd"       , &jmass_sd      );    
+    tGEN->Branch("jmass_pr"       , &jmass_pr      );    
     tGEN->Branch("jmultiplicity"  , &jmultiplicity      );    
     tGEN->Branch("jisleptag"      , &jisleptag      );        
+    tGEN->Branch("costheta1"      , &costheta1      );    
 
 
     TTree *tGEN_charged = new TTree("tGEN_charged","Tree with vectors");
@@ -242,8 +291,10 @@ int main (int argc, char **argv) {
     tGEN_charged->Branch("jphi"           , &jphi       );
     tGEN_charged->Branch("jmass"          , &jmass      );    
     tGEN_charged->Branch("jmass_sd"       , &jmass_sd      );    
+    tGEN_charged->Branch("jmass_pr"       , &jmass_pr      );    
     tGEN_charged->Branch("jmultiplicity"  , &jmultiplicity      );    
     tGEN_charged->Branch("jisleptag"      , &jisleptag      );        
+    tGEN_charged->Branch("costheta1"      , &costheta1      );    
 
     TTree *tGEN_nonu = new TTree("tGEN_nonu","Tree with vectors");
     tGEN_nonu->Branch("njets"          , &njets      );
@@ -254,8 +305,10 @@ int main (int argc, char **argv) {
     tGEN_nonu->Branch("jphi"           , &jphi       );
     tGEN_nonu->Branch("jmass"          , &jmass      );    
     tGEN_nonu->Branch("jmass_sd"       , &jmass_sd      );    
+    tGEN_nonu->Branch("jmass_pr"       , &jmass_pr      );    
     tGEN_nonu->Branch("jmultiplicity"  , &jmultiplicity      );    
     tGEN_nonu->Branch("jisleptag"      , &jisleptag      );        
+    tGEN_nonu->Branch("costheta1"      , &costheta1      );    
 
     TTree *tGEN_response = new TTree("tGEN_response","Tree with vectors");
     tGEN_response->Branch("njets"          , &njets      );
@@ -266,8 +319,10 @@ int main (int argc, char **argv) {
     tGEN_response->Branch("jphi"           , &jphi       );
     tGEN_response->Branch("jmass"          , &jmass      );    
     tGEN_response->Branch("jmass_sd"       , &jmass_sd      );    
+    tGEN_response->Branch("jmass_pr"       , &jmass_pr      );    
     tGEN_response->Branch("jmultiplicity"  , &jmultiplicity      );    
     tGEN_response->Branch("jisleptag"      , &jisleptag      );        
+    tGEN_response->Branch("costheta1"      , &costheta1      );    
 
     TTree *tGEN_resolution = new TTree("tGEN_resolution","Tree with vectors");
     tGEN_resolution->Branch("njets"          , &njets      );
@@ -278,8 +333,10 @@ int main (int argc, char **argv) {
     tGEN_resolution->Branch("jphi"           , &jphi       );
     tGEN_resolution->Branch("jmass"          , &jmass      );    
     tGEN_resolution->Branch("jmass_sd"       , &jmass_sd      );    
+    tGEN_resolution->Branch("jmass_pr"       , &jmass_pr      );    
     tGEN_resolution->Branch("jmultiplicity"  , &jmultiplicity      );    
     tGEN_resolution->Branch("jisleptag"      , &jisleptag      );        
+    tGEN_resolution->Branch("costheta1"      , &costheta1      );    
 
 
     TTree *tMC = new TTree("tMC","Tree with vectors");
@@ -289,6 +346,13 @@ int main (int argc, char **argv) {
     int ctr = 0;
     counter =0;
     while(true){
+
+      for(int i=0; i<2; i++){
+	h_gen[i].p4.SetPxPyPzE(0,0,0,0);
+	h_gen[i].p4_b1.SetPxPyPzE(0,0,0,0);
+	h_gen[i].p4_b2.SetPxPyPzE(0,0,0,0);
+	h_gen[i].cosTheta1 = -999;
+      }
 
         readEvent( allParticles );
         readEventGEN( allParticlesGEN ); 
@@ -300,6 +364,9 @@ int main (int argc, char **argv) {
         readEventMC( allParticlesMC );
         readEventCalo( allParticlesCalo );
 	readEventTrack( allParticlesTrack);
+
+	computeCosTheta1();
+
         // std::cout << "size of collection = " << allParticles.size() << "," << allParticlesMC.size() << ", " << allParticlesCalo.size() << std::endl;
         if (ctr > 0){
 	  
@@ -353,7 +420,8 @@ int main (int argc, char **argv) {
         ctr++;
 	std::cout << "ctr = " << ctr << std::endl;
 
-        if(fin.eof()) break;
+	if(fin.eof()) break;
+	//	if(ctr==100)break;
     }
 
     f->cd();
@@ -426,9 +494,25 @@ void readEventMC( std::vector< fastjet::PseudoJet > &allParticles ){
         // std::cout << "pdgid = " << pdgid << ", " << px << ", " << py << std::endl;
     
         if (pdgid == -99){
-            return;
+	  return;
         }        
     
+	if(pdgid==25 && h_gen[0].p4.E()< 1e-6)
+	  h_gen[0].p4.SetPxPyPzE(px,py,pz,e);
+	else if(pdgid==25 && h_gen[1].p4.E()< 1e-6)
+	  h_gen[1].p4.SetPxPyPzE(px,py,pz,e);
+
+	if(pdgid==5 && h_gen[0].p4_b1.E()<1e-6)
+	  h_gen[0].p4_b1.SetPxPyPzE(px,py,pz,e);
+	else if(pdgid==-5 && h_gen[0].p4_b2.E()<1e-6)
+	  h_gen[0].p4_b2.SetPxPyPzE(px,py,pz,e);
+
+	else if(pdgid==5 && h_gen[1].p4_b1.E()<1e-6)
+	  h_gen[1].p4_b1.SetPxPyPzE(px,py,pz,e);
+	else if(pdgid==-5 && h_gen[1].p4_b2.E()<1e-6)
+	  h_gen[1].p4_b2.SetPxPyPzE(px,py,pz,e);
+
+
         // fill vector of pseudojets
         fastjet::PseudoJet curPseudoJet( px, py, pz, e );
         curPseudoJet.set_user_index(pdgid);
@@ -834,7 +918,6 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     fastjet::AreaDefinition fjAreaDefinition( fastjet::active_area, fjActiveArea );
     
     fastjet::ClusterSequenceArea* thisClustering = new fastjet::ClusterSequenceArea(particles, jetDef, fjAreaDefinition);
-    // fastjet::ClusterSequenceArea* caloClustering = new fastjet::ClusterSequenceArea(caloclusters, jetDef, fjAreaDefinition);
     // taking minium E = 0 for pion gun
     std::vector<fastjet::PseudoJet> out_jets = sorted_by_pt(thisClustering->inclusive_jets(25.0));
  
@@ -891,28 +974,6 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       if(isISRPhoton)continue;
       numGoodJets++;
 
-//       if(counter%8==1){
-// 	std::cout << endl;
-// 	std::cout << "in the same event : " << std::endl;
-	
-// 	std::cout << "jet " << i << ": " << out_jets[i].px() << ", " << out_jets[i].py() << ", " << out_jets[i].pz() << "," << out_jets[ \
-// 																	i].E() << "\t" << out_jets[i].eta() << endl;
-// 	std::cout << "constituent:" << std::endl;
-//        for(unsigned int k=0;k< out_jets[i].constituents().size(); k++)
-// 	 {
-	   
-// 	   std::cout << out_jets[i].constituents()[k].user_index() << ", "
-// 		     << out_jets[i].constituents()[k].px() << ", "
-// 		     << out_jets[i].constituents()[k].py() << ", "
-// 		     << out_jets[i].constituents()[k].pz() << ", "
-// 		     << out_jets[i].constituents()[k].e() << std::endl;
-// 	 }
-//       }
-	
-//       std::cout << endl;
-      
-
-
       double isleptag = 0;
       double minDR = 9999.;
       for (unsigned int j = 0; j < MCparticles.size(); j++){
@@ -930,9 +991,32 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       jphi.push_back( out_jets[i].phi() );
       jmass.push_back( out_jets[i].m() );  
       jmass_sd.push_back( soft_drop_mmdt( out_jets.at(i) ).m() );        
+
+      fastjet::Pruner mypruner(fastjet::cambridge_algorithm,0.1,0.5);
+      PseudoJet pruned_jet = mypruner(out_jets[i]); 
+      jmass_pr.push_back(pruned_jet.m());
+
       jmultiplicity.push_back( (float) out_jets.at(i).constituents().size() );
       jisleptag.push_back( isleptag );
       
+      
+      int genHIndex=-1;
+      for(unsigned int ip=0; ip<2; ip++)
+	{
+	  double dr = sqrt(pow(h_gen[i].p4.Eta()-out_jets[i].eta(),2)+
+			   pow(h_gen[i].p4.Phi()-out_jets[i].phi(),2));
+	  if(dr < jetRadius)
+	    {
+	      genHIndex=ip;
+	      break;
+	    }
+	}
+  
+      if(genHIndex<0)
+	costheta1.push_back(-999);
+      else
+	costheta1.push_back(h_gen[i].cosTheta1);
+
     }
     njets = numGoodJets;
 
