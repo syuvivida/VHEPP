@@ -87,6 +87,8 @@ TH1F* hy;
 int counter;
 int evtCtr;
 
+const int NJOBS=7;
+
 int njets;
 double gen_mZp;
 double gen_mWW;
@@ -349,10 +351,12 @@ int main (int argc, char **argv) {
             clearVectors();
 	    analyzeEvent( allParticlesTrack, jetRadius, allParticlesMC );
 	    ttrack->Fill();
-
-	    clearVectors();
-	    analyzeEvent( allParticlesRawHits, jetRadius, allParticlesMC );
-	    trawhits->Fill();
+	    
+	    if(NJOBS==8){
+	      clearVectors();
+	      analyzeEvent( allParticlesRawHits, jetRadius, allParticlesMC );
+	      trawhits->Fill();
+	    }
 
 	    clearVectors();
  	    analyzeEvent( allParticlesRawHits2, jetRadius, allParticlesMC );
@@ -883,13 +887,13 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
   //    std::cout << "analyzing event..." << particles.size() << std::endl;
     double rParam = rVal;
     fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, rParam);    
-    if(counter%8==0)
+    if(counter%NJOBS==0)
       for(unsigned int i=0; i < particles.size(); i++)       
 	heta_after1->Fill(particles[i].eta());
       
 
     // doing my own clustering
-    if(counter%8==7){
+    if(counter%NJOBS==NJOBS-1){
       fastjet::PseudoJet w[2];
       for (unsigned int i = 0; i < MCparticles.size(); i++){
         double pdgid =  MCparticles[i].user_index();
@@ -897,6 +901,12 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
                 w[0].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
             }
             if (pdgid == -24){
+                w[1].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+            if (pdgid == 25 && w[0].E()<1e-6){         
+                w[0].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+            else if (pdgid == 25 && w[1].E()<1e-6){
                 w[1].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
             }
       }
@@ -940,7 +950,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	  jisleptag.push_back(0);
 	}
 
-    } // if counter%8==7
+    } // if counter%NJOBS==NJOBS-1
     else{
 
       int activeAreaRepeats = 1;
@@ -953,7 +963,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       fastjet::ClusterSequenceArea* thisClustering = new fastjet::ClusterSequenceArea(particles, jetDef, fjAreaDefinition);
       std::vector<fastjet::PseudoJet> out_jets = sorted_by_pt(thisClustering->inclusive_jets(25.0));
  
-      if(counter%8==0)
+      if(counter%NJOBS==0)
 	{
 	  for (unsigned int i = 0; i < out_jets.size() ; i++)
 	    {
@@ -971,7 +981,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	
 	}
 
-      else if(counter%8==3)
+      else if(counter%NJOBS==3)
 	for (unsigned int i = 0; i < out_jets.size() ; i++)
 	  heta_PF->Fill(out_jets[i].eta());
 
@@ -1030,7 +1040,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 
     njets = numGoodJets;
 
-    } // itcounter!=7
+    } // itcounter%NJOBS!=NJOBS-1
     counter++;    
 
 }
