@@ -92,6 +92,8 @@ const int NJOBS=7;
 int njets;
 double gen_mZp;
 double gen_mWW;
+
+//jet-level ntuple
 std::vector<float> je;
 std::vector<float> jpt;
 std::vector<float> jp;
@@ -102,6 +104,22 @@ std::vector<float> jmultiplicity;
 std::vector<float> jisleptag;
 std::vector<float> jmass_sd;
 
+//hit-level ntuple
+int nhits;
+std::vector<float> genMEta; // mother eta
+std::vector<float> gendrqq;
+std::vector<float> hitdphi;   
+std::vector<float> hitdeta;   
+std::vector<float> hitdphi1;
+std::vector<float> hitdphi2;
+std::vector<float> hitdeta1;
+std::vector<float> hitdeta2;
+std::vector<int> hitindex;  
+std::vector<int> hitdec;    
+std::vector<float> hitpx;     
+std::vector<float> hitpy;     
+std::vector<float> hitpz;     
+std::vector<float> hite;      
 
 
 
@@ -134,6 +152,22 @@ void clearVectors(){
   jmass_sd.clear();        
   jmultiplicity.clear();
   jisleptag.clear();
+
+  nhits = 0;
+  genMEta.clear();
+  gendrqq.clear();
+  hitdphi.clear();
+  hitdeta.clear();
+  hitdphi1.clear();
+  hitdphi2.clear();
+  hitdeta1.clear();
+  hitdeta2.clear();
+  hitindex.clear();
+  hitdec.clear();
+  hitpx.clear();
+  hitpy.clear();
+  hitpz.clear();
+  hite.clear();
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -253,7 +287,35 @@ int main (int argc, char **argv) {
     trawhits2->Branch("jmultiplicity"  , &jmultiplicity      );    
     trawhits2->Branch("jisleptag"      , &jisleptag      );    
 
+    TTree* hittuple = new TTree("hittuple","Tree with calo hits");
+    hittuple->Branch("nhits", &nhits);
+    hittuple->Branch("genMEta",&genMEta);
+    hittuple->Branch("gendrqq", &gendrqq);
+    hittuple->Branch("hitdphi", &hitdphi);
+    hittuple->Branch("hitdeta", &hitdeta);
+    hittuple->Branch("hitdphi1", &hitdphi1);
+    hittuple->Branch("hitdphi2", &hitdphi2);
+    hittuple->Branch("hitdeta1", &hitdeta1);
+    hittuple->Branch("hitdeta2", &hitdeta2);
+    hittuple->Branch("hitindex", &hitindex);
+    hittuple->Branch("hitdec", &hitdec);
+    hittuple->Branch("hitpx", &hitpx);
+    hittuple->Branch("hitpy", &hitpy);
+    hittuple->Branch("hitpz", &hitpz);
+    hittuple->Branch("hite", &hite);
 
+    TTree* fjtuple = new TTree("fjtuple","Tree with calo hits from fastjet");
+    fjtuple->Branch("nhits", &nhits);
+    fjtuple->Branch("genMEta",&genMEta);
+    fjtuple->Branch("gendrqq", &gendrqq);
+    fjtuple->Branch("hitdphi", &hitdphi);
+    fjtuple->Branch("hitdeta", &hitdeta);
+    fjtuple->Branch("hitindex", &hitindex);
+    fjtuple->Branch("hitdec", &hitdec);
+    fjtuple->Branch("hitpx", &hitpx);
+    fjtuple->Branch("hitpy", &hitpy);
+    fjtuple->Branch("hitpz", &hitpz);
+    fjtuple->Branch("hite", &hite);
 
     TTree *ttrack = new TTree("ttrack","Tree with vectors");
     ttrack->Branch("njets"          , &njets      );
@@ -347,6 +409,7 @@ int main (int argc, char **argv) {
             clearVectors();
             analyzeEvent( allParticlesCalo, jetRadius, allParticlesMC );
             tcalo->Fill();    
+	    fjtuple->Fill();
 
             clearVectors();
 	    analyzeEvent( allParticlesTrack, jetRadius, allParticlesMC );
@@ -361,6 +424,7 @@ int main (int argc, char **argv) {
 	    clearVectors();
  	    analyzeEvent( allParticlesRawHits2, jetRadius, allParticlesMC );
  	    trawhits2->Fill();
+	    hittuple->Fill();
   
             analyzeMCEvent( allParticlesMC );
             tMC->Fill();
@@ -380,7 +444,7 @@ int main (int argc, char **argv) {
 	std::cout << "ctr = " << ctr << std::endl;
 
 	if(fin.eof()) break;
-	//	if(ctr==100)break;
+	//	if(ctr==10)break;
     }
 
     f->cd();
@@ -395,6 +459,8 @@ int main (int argc, char **argv) {
     tcalo->Write();
     trawhits->Write();
     trawhits2->Write();
+    hittuple->Write();
+    fjtuple->Write();
     ttrack->Write();
     tGEN->Write();
     tGEN_nonu->Write();
@@ -782,7 +848,7 @@ void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles ){
     while(true){
         
         finECalHits2  >> pdgid >> x >> y >> z >> e;         
-        // std::cout << "pdgid = " << pdgid << ", " << px << ", " << py << std::endl;
+	//	std::cout << "pdgid = " << pdgid << ", " << x << ", " << y << ", " << z << std::endl;
     
         TVector3 caloposition(x,y,z);
         double curPhi = caloposition.Phi();
@@ -816,7 +882,8 @@ void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles ){
     while(true){
         
         finHCalHits2  >> pdgid >> x >> y >> z >> e;         
-    
+	//    	std::cout << "pdgid = " << pdgid << ", " << x << ", " << y << ", " << z << std::endl;
+
         TVector3 caloposition(x,y,z);
         double curPhi = caloposition.Phi();
         double curEta = caloposition.Eta();
@@ -895,6 +962,8 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
     // doing my own clustering
     if(counter%NJOBS==NJOBS-1){
       fastjet::PseudoJet w[2];
+      fastjet::PseudoJet quarks[2][2];
+
       for (unsigned int i = 0; i < MCparticles.size(); i++){
         double pdgid =  MCparticles[i].user_index();
             if (pdgid == 24){         
@@ -903,14 +972,57 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
             if (pdgid == -24){
                 w[1].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
             }
-            if (pdgid == 25 && w[0].E()<1e-6){         
+            if (pdgid == 25 && w[0].e()<1e-6){         
                 w[0].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
             }
-            else if (pdgid == 25 && w[1].E()<1e-6){
+            else if (pdgid == 25 && w[1].e()<1e-6){
                 w[1].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
             }
+	    
+	    // if they are quarks
+	    if(fabs(pdgid)>=1 && fabs(pdgid)<=5)
+	      {
+		if(quarks[0][0].e()<1e-6)
+		  {
+		    quarks[0][0].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+		    quarks[0][0].set_user_index(pdgid);
+		  }
+		else if(quarks[0][1].e()<1e-6)
+		  {
+		    quarks[0][1].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+		    quarks[0][1].set_user_index(pdgid);
+		  }
+		else if(quarks[1][0].e()<1e-6)
+		  {
+		    quarks[1][0].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+		    quarks[1][0].set_user_index(pdgid);
+		  }
+		else if(quarks[1][1].e()<1e-6)
+		  {
+		    quarks[1][1].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+		    quarks[1][1].set_user_index(pdgid);
+		  }
+
+	      }
+
       }
 
+
+//       cout << "debugging " << endl;
+      float gen_drqq[2]={-9999,-9999};
+
+      for(int eiko=0; eiko<2; eiko++)
+	{
+// 	  for(int ab=0; ab<2; ab++)
+// 	    cout << quarks[eiko][ab].user_index() << " " << quarks[eiko][ab].px() << " " << quarks[eiko][ab].py() << " " << quarks[eiko][ab].pz() << endl;
+	  if(quarks[eiko][0].e()<1e-6)continue;
+	  if(quarks[eiko][1].e()<1e-6)continue;
+	  float dr = sqrt( pow(quarks[eiko][0].phi()-quarks[eiko][1].phi(),2)+
+			   pow(quarks[eiko][0].eta()-quarks[eiko][1].eta(),2)
+			   );
+	  gen_drqq[eiko] = dr;
+	  
+	}
       if(w[0].e()<1e-6 && w[1].e()<1e-6)
 	{
 	  std::cout << "W not found!" << std::endl;
@@ -926,11 +1038,49 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	  for(unsigned int iw=0; iw < 2; iw++)
 	    {
 	      if(w[iw].e()<1e-6)continue;
-	      double dr = sqrt( pow(particles[i].phi()-w[iw].phi(),2) + pow(particles[i].eta()-w[iw].eta(),2) );
-	      if(dr > jetRadius)continue;
+	      double dphi = particles[i].phi()-w[iw].phi();
+	      double deta = particles[i].eta()-w[iw].eta();
 
+	      double dphi1 = particles[i].phi()-quarks[iw][0].phi();
+	      double dphi2 = particles[i].phi()-quarks[iw][1].phi();
+
+	      double deta1 = particles[i].eta()-quarks[iw][0].eta();
+	      double deta2 = particles[i].eta()-quarks[iw][1].eta();
+
+
+	      TLorentzVector a_temp(0,0,0,0);
+	      TLorentzVector b_temp(0,0,0,0);
+	      a_temp.SetPxPyPzE(particles[i].px(),
+				particles[i].py(),
+				particles[i].pz(),
+				particles[i].e());
+	      b_temp.SetPxPyPzE(w[iw].px(),
+				w[iw].py(),
+				w[iw].pz(),
+				w[iw].e());
+				
+	      double dr = a_temp.DeltaR(b_temp);
+	      if(dr > jetRadius)continue;
 	      nPart[iw]++;
 	      Wjet[iw] += particles[i];
+	      nhits++;
+	      genMEta.push_back(w[iw].eta());
+	      gendrqq.push_back(gen_drqq[iw]);
+	      hitdphi.push_back(dphi);
+	      hitdeta.push_back(deta);
+
+	      hitdphi1.push_back(dphi1);
+	      hitdphi2.push_back(dphi2);
+	      hitdeta1.push_back(deta1);
+	      hitdeta2.push_back(deta2);
+
+	      hitindex.push_back(iw);
+	      hitdec.push_back((int)particles[i].user_index());
+	      hitpx.push_back(particles[i].px());
+	      hitpy.push_back(particles[i].py());
+	      hitpz.push_back(particles[i].pz());
+	      hite.push_back(particles[i].e());
+
 	    }
 	}
 
@@ -998,7 +1148,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       int numGoodJets=0;
 
       for (unsigned int i = 0; i < out_jets.size() && numGoodJets<2; i++){
-
+	
 	// check if this jet is matched to an ISR photon
 	bool isISRPhoton=false;
 	for(unsigned int k =0; k < ISRPhotons.size(); k++){
@@ -1014,6 +1164,26 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	}
       
 	if(isISRPhoton)continue;
+
+	// look for constituents of calojets
+
+	if(counter%NJOBS==4)
+	  {
+	    for(unsigned int jc = 0; jc < out_jets[i].constituents().size(); jc++){	      
+	      double dphi = out_jets[i].constituents()[jc].phi()-out_jets[i].phi();
+	      double deta = out_jets[i].constituents()[jc].eta()-out_jets[i].eta();
+	      nhits++;
+	      genMEta.push_back(out_jets[i].eta());
+	      hitdphi.push_back(dphi);
+	      hitdeta.push_back(deta);
+	      hitindex.push_back(numGoodJets);
+	      hitpx.push_back(out_jets[i].constituents()[jc].px());
+	      hitpy.push_back(out_jets[i].constituents()[jc].py());
+	      hitpz.push_back(out_jets[i].constituents()[jc].pz());
+	      hite.push_back(out_jets[i].constituents()[jc].e());
+	    }
+	  }
+	
 	numGoodJets++;
 
 	double isleptag = 0;
