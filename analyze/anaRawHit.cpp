@@ -114,6 +114,7 @@ std::vector<float> hitdphi1;
 std::vector<float> hitdphi2;
 std::vector<float> hitdeta1;
 std::vector<float> hitdeta2;
+std::vector<float> hitsigndR;
 std::vector<int> hitindex;  
 std::vector<int> hitdec;    
 std::vector<float> hitpx;     
@@ -162,6 +163,7 @@ void clearVectors(){
   hitdphi2.clear();
   hitdeta1.clear();
   hitdeta2.clear();
+  hitsigndR.clear();
   hitindex.clear();
   hitdec.clear();
   hitpx.clear();
@@ -297,6 +299,7 @@ int main (int argc, char **argv) {
     hittuple->Branch("hitdphi2", &hitdphi2);
     hittuple->Branch("hitdeta1", &hitdeta1);
     hittuple->Branch("hitdeta2", &hitdeta2);
+    hittuple->Branch("hitsigndR", &hitsigndR);
     hittuple->Branch("hitindex", &hitindex);
     hittuple->Branch("hitdec", &hitdec);
     hittuple->Branch("hitpx", &hitpx);
@@ -1008,6 +1011,34 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       }
 
 
+      // reset W if it overlaps with ISR photons
+	// check if this jet is matched to an ISR photon
+      for(int iw=0; iw<2; iw++){
+	
+	if(w[iw].e()<1e-6)continue;
+	//	cout << "W " << iw  << " " << w[iw].px() << " " << w[iw].py() << " " << w[iw].pz() << endl;	
+	bool isISRPhoton=false;
+	for(unsigned int k =0; k < ISRPhotons.size(); k++){
+	
+	  double dr = sqrt( pow(ISRPhotons[k].phi()-w[iw].phi(),2) + pow(ISRPhotons[k].eta()-w[iw].eta(),2) );
+	  if(dr < jetRadius)
+	    {
+	      isISRPhoton=true;
+	      break;
+	    }
+      
+	}
+      
+	if(isISRPhoton){
+	  std::cout << "W overlaps with an ISR Photon ! " << std::endl;
+	  w[iw].reset(0,0,0,0);
+	}
+
+      } // end loop of generator-level W
+      
+
+
+
 //       cout << "debugging " << endl;
       float gen_drqq[2]={-9999,-9999};
 
@@ -1033,11 +1064,21 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       Wjet[0].reset(0,0,0,0);
       Wjet[1].reset(0,0,0,0);
       int nPart[2]={0,0};
+      double ecale[2] = {0};
+      double hcale[2] = {0};
+
       for(unsigned int i=0; i < particles.size(); i++)
 	{
+	  bool used = false;
 	  for(unsigned int iw=0; iw < 2; iw++)
 	    {
 	      if(w[iw].e()<1e-6)continue;
+	      if(used)continue;
+
+// 	      std::cout << w[iw].px() << " " << w[iw].py() << " " << w[iw].pz() << std::endl;
+// 	      cout << quarks[iw][0].user_index() << " " << quarks[iw][0].px() << " " << quarks[iw][0].py() << " " << quarks[iw][0].pz() << endl;
+// 	      cout << quarks[iw][1].user_index() << " " << quarks[iw][1].px() << " " << quarks[iw][1].py() << " " << quarks[iw][1].pz() << endl;
+
 	      double dphi = particles[i].phi()-w[iw].phi();
 	      double deta = particles[i].eta()-w[iw].eta();
 
@@ -1047,6 +1088,12 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	      double deta1 = particles[i].eta()-quarks[iw][0].eta();
 	      double deta2 = particles[i].eta()-quarks[iw][1].eta();
 
+	      double dphiq12 = quarks[iw][0].phi()-quarks[iw][1].phi();
+	      double detaq12 = quarks[iw][0].eta()-quarks[iw][1].eta();
+
+	      double signedDR = detaq12*deta + dphiq12*dphi; 
+// 	      cout << "deta = " << deta << " dphi = " << dphi << endl;
+// 	      std::cout << "signedDR= " << signedDR << std::endl;
 
 	      TLorentzVector a_temp(0,0,0,0);
 	      TLorentzVector b_temp(0,0,0,0);
@@ -1061,6 +1108,15 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 				
 	      double dr = a_temp.DeltaR(b_temp);
 	      if(dr > jetRadius)continue;
+	      used = true;
+	      if((int)particles[i].user_index()==0){
+		ecale[iw] += particles[i].e();
+		//		std::cout << "ECAL hit E = " << particles[i].e() << std::endl;
+	      }
+	      else if((int)particles[i].user_index()==1){
+		hcale[iw] += particles[i].e();
+		//		std::cout << "HCAL hit E = " << particles[i].e() << std::endl;
+	      }
 	      nPart[iw]++;
 	      Wjet[iw] += particles[i];
 	      nhits++;
@@ -1074,6 +1130,8 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	      hitdeta1.push_back(deta1);
 	      hitdeta2.push_back(deta2);
 
+	      hitsigndR.push_back(signedDR);
+
 	      hitindex.push_back(iw);
 	      hitdec.push_back((int)particles[i].user_index());
 	      hitpx.push_back(particles[i].px());
@@ -1081,10 +1139,13 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	      hitpz.push_back(particles[i].pz());
 	      hite.push_back(particles[i].e());
 
-	    }
-	}
+	    } // end loop of W/Higgs boson
+	} // end loop of calo hits
 
+//       std::cout << "ECAL E0 : HCAL E0 = " << ecale[0] <<" : " << hcale[0] << std::endl;
+//       std::cout << "ECAL E1 : HCAL E1 = " << ecale[1] <<" : " << hcale[1] << std::endl;
 
+      // filling clustered jet information
       for(unsigned int iw=0; iw < 2; iw++)
 	{
 	  if(Wjet[iw].e()<1e-6)continue;
