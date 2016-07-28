@@ -959,9 +959,22 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 
       // check if this jet is matched to an ISR photon
       bool isISRPhoton=false;
-      for(unsigned int k =0; k < ISRPhotons.size(); k++){
-	
-	double dr = sqrt( pow(ISRPhotons[k].phi()-out_jets[i].phi(),2) + pow(ISRPhotons[k].eta()-out_jets[i].eta(),2) );
+      for(unsigned int k =0; k < ISRPhotons.size(); k++){	
+
+	TLorentzVector temp_pho(0,0,0,0);
+	temp_pho.SetPxPyPzE(ISRPhotons[k].px(),
+			    ISRPhotons[k].py(),
+			    ISRPhotons[k].pz(),
+			    ISRPhotons[k].e());
+
+	TLorentzVector temp_jet(0,0,0,0);
+	temp_jet.SetPxPyPzE(out_jets[i].px(),
+			    out_jets[i].py(),
+			    out_jets[i].pz(),
+			    out_jets[i].e());
+			  
+	double dr = temp_pho.DeltaR(temp_jet);
+
 	double Eratio = ISRPhotons[k].E()>1e-6? out_jets[i].E()/ISRPhotons[k].E(): -1;
 	if(dr < 0.1 && Eratio > 0.7 && Eratio < 1.3)
 	  {

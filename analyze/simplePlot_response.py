@@ -16,6 +16,20 @@ tdrstyle.setTDRStyle()
 ROOT.gStyle.SetPadRightMargin(0.15)
 ROOT.gStyle.SetPalette(1)
 
+## Obtain proper dr
+def myDeltaR(eta1, eta2, phi1, phi2):
+
+   deta = eta1-eta2;
+   dphi = phi1-phi2;
+
+   if dphi >= math.pi: 
+       dphi = dphi-math.pi*2;
+   if dphi < -math.pi:
+       dphi = dphi+math.pi*2;
+
+   dr = math.sqrt(deta*deta+dphi*dphi)
+   return dr
+
 
 ## Obtain FWHM
 
@@ -33,9 +47,9 @@ def makeCanvas(sample, hists, tags):
 #    if hists[0].GetName() == "h_jp_gen_nonu" or hists[0].GetName() == "h_jpt_gen_nonu" or hists[0].GetName() == "h_je_gen_nonu":            
 #        leg = ROOT.TLegend(0.4,0.6,0.8,0.9)
 #    else:
-    if hists[0].GetName() == "h_jeratio_gen_nonu":
+    if hists[0].GetName() == "h_jeratio_gen_response":
         leg = ROOT.TLegend(0.18,0.4,0.8,0.9)
-    elif (sample =='1' or sample =='2' or sample =='3' or sample =='4') and (hists[0].GetName() == "h_jp_gen_nonu" or hists[0].GetName() == "h_jpt_gen_nonu" or hists[0].GetName() == "h_je_gen_nonu"):
+    elif ((sample =='1' or sample =='2' or sample =='3' or sample =='4') and (hists[0].GetName() == "h_jp_gen_nonu" or hists[0].GetName() == "h_jpt_gen_nonu" or hists[0].GetName() == "h_je_gen_nonu")) or hists[0].GetName() == "h_jmass_gen_nonu" or hists[0].GetName() == "h_jmass_sd_gen_nonu":
         leg = ROOT.TLegend(0.45,0.6,0.85,0.9)
     else:
         leg = ROOT.TLegend(0.18,0.6,0.58,0.9)
@@ -46,19 +60,21 @@ def makeCanvas(sample, hists, tags):
 
 
     for i in range(len(hists)):
-        if hists[0].GetName() == "h_jeratio_gen_nonu":
+        if hists[0].GetName() == "h_jeratio_gen_response":
             tagname="RMS = " + "{:.3f}".format(hists[i].GetRMS())
             tagname2="FWHM = " + "{:.3f}".format(FWHM(hists[i]))
             leg.AddEntry(hists[i],tags[i],'l')
             leg.AddEntry(None, tagname,'')
             leg.AddEntry(None, tagname2,'')
-        else:
+        elif hists[0].GetName() != "h_jeratio_gen_nonu" :
             leg.AddEntry(hists[i],tags[i],'l')
         if hists[i].GetMaximum() > tmax:
             tmax = hists[i].GetMaximum()
             
     if hists[0].GetName() == "h_jeta_gen_nonu" or hists[0].GetName() == "h_jphi_gen_nonu": 
         hists[0].SetMaximum(tmax*2.0)
+#    elif hists[0].GetName() == "h_jeratio_gen_nonu":
+#        hists[1].SetMaximum(tmax*1.2)
     else:
         hists[0].SetMaximum(tmax*1.2)
             
@@ -67,9 +83,13 @@ def makeCanvas(sample, hists, tags):
         hists[i].SetMinimum(0)
         hists[i].GetYaxis().SetDecimals()
         hists[i].SetLineWidth(3)
-        hists[i].SetLineStyle(i+1)
+        hists[i].SetLineStyle(1)
+        if i == 0 or i==2:
+            hists[i].SetLineStyle(2+i)
         if i == 0:
             hists[i].DrawNormalized('hist')
+        elif hists[0].GetName() == "h_jeratio_gen_nonu" and i ==1:
+            hists[i].DrawNormalized('hist')            
         else: 
             hists[i].SetLineColor( colors[i] )
             hists[i].DrawNormalized('histsames')
@@ -106,42 +126,42 @@ def getHists(sample,tin,tinmc,postfix):
         h_je       = ROOT.TH1F("h_je"+postfix,      titleje,    50,2000,6000);
         h_jpt      = ROOT.TH1F("h_jpt"+postfix,     titlejpt,   50,0,6000)
         h_jp       = ROOT.TH1F("h_jp"+postfix,      titlejp,    50,2000,6000)
-        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,130)
-        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,130)
+        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,800)
+        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,800)
 # Z' = 5 TeV sqrt(s)=40 TeV
     elif sample =='1':
         h_je       = ROOT.TH1F("h_je"+postfix,      titleje,    50,0,10000);
         h_jpt      = ROOT.TH1F("h_jpt"+postfix,     titlejpt,   50,0,10000)
         h_jp       = ROOT.TH1F("h_jp"+postfix,      titlejp,    50,0,10000)
-        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,130)
-        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,130)
+        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,800)
+        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,800)
 # Z' = 10 TeV sqrt(s)=40 TeV
     elif sample =='2':
         h_je       = ROOT.TH1F("h_je"+postfix,      titleje,    50,0,20000);
         h_jpt      = ROOT.TH1F("h_jpt"+postfix,     titlejpt,   50,0,20000)
         h_jp       = ROOT.TH1F("h_jp"+postfix,      titlejp,    50,0,20000)
-        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,130)
-        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,130)
+        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,800)
+        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,800)
 # Z' = 20 TeV sqrt(s)=40 TeV
     elif sample =='3':
         h_je       = ROOT.TH1F("h_je"+postfix,      titleje,    50,0,35000);
         h_jpt      = ROOT.TH1F("h_jpt"+postfix,     titlejpt,   50,0,35000)
         h_jp       = ROOT.TH1F("h_jp"+postfix,      titlejp,    50,0,35000)
-        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,130)
-        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,130)
+        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,800)
+        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,800)
 # Z' = 30 TeV sqrt(s)=40 TeV
     elif sample =='4':
         h_je       = ROOT.TH1F("h_je"+postfix,      titleje,    50,0,45000);
         h_jpt      = ROOT.TH1F("h_jpt"+postfix,     titlejpt,   50,0,45000)
         h_jp       = ROOT.TH1F("h_jp"+postfix,      titlejp,    50,0,45000)
-        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,130)
-        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,130)
+        h_jmass    = ROOT.TH1F("h_jmass"+postfix,   titlejmass, 50,0,800)
+        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,titlejsd,   50,0,800)
     else:
 	h_je       = ROOT.TH1F("h_je"+postfix,"; jet energy; N",50,10000,22000);
 	h_jpt      = ROOT.TH1F("h_jpt"+postfix,"; pT; N",50,0,22000)
 	h_jp       = ROOT.TH1F("h_jp"+postfix,"; p; N",50,10000,22000)
-        h_jmass    = ROOT.TH1F("h_jmass"+postfix,"; mass; N",50,0,130)
-        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,"; soft drop mass (#beta = 0); N",50,0,130)
+        h_jmass    = ROOT.TH1F("h_jmass"+postfix,"; mass; N",50,0,800)
+        h_jmass_sd = ROOT.TH1F("h_jmass_sd"+postfix,"; soft drop mass (#beta = 0); N",50,0,800)
 
     
     h_jeratio.SetNdivisions(5);
@@ -160,7 +180,9 @@ def getHists(sample,tin,tinmc,postfix):
         for n in range(len(tin.jpt)):
             if tin.jisleptag[n]==0 and abs(tin.jeta[n])<1.1:
                 for k in range(len(tinmc.jpt)):
-                    dr = math.sqrt( (tin.jphi[n]-tinmc.jphi[k])*(tin.jphi[n]-tinmc.jphi[k]) + (tin.jeta[n]-tinmc.jeta[k])*(tin.jeta[n]-tinmc.jeta[k]) )
+                    
+                    dr = myDeltaR(tin.jeta[n],tinmc.jeta[k],tin.jphi[n],tinmc.jphi[k])
+                    
                     if dr<0.1:
                         h_jeratio.Fill( tin.je[n]/tinmc.je[k])
                         h_je.Fill( tin.je[n] )
@@ -208,10 +230,10 @@ def GetResolutions(tin,tin1,tin2,pf):
             if tin1.jisleptag[j] == 0: 
                 for k in range(len(tin2.jpt)):
                     if tin2.jisleptag[k] == 0:
-                        dr = math.sqrt( (tin1.jphi[j]-tin2.jphi[k])*(tin1.jphi[j]-tin2.jphi[k]) + (tin1.jeta[j]-tin2.jeta[k])*(tin1.jeta[j]-tin2.jeta[k]) )
+                        dr = myDeltaR(tin1.jeta[j],tin2.jeta[k],tin1.jphi[j],tin2.jphi[k])
                         if dr < 0.01: 
                             for n in range(len(tin.jpt)):
-                                drpf = math.sqrt( (tin1.jphi[j]-tin.jphi[n])*(tin1.jphi[j]-tin.jphi[n]) + (tin1.jeta[j]-tin.jeta[n])*(tin1.jeta[j]-tin.jeta[n]) )
+                                drpf = myDeltaR(tin1.jeta[j],tin.jeta[n],tin1.jphi[j],tin.jphi[n])
                                 if(drpf < 0.4 and tin.jisleptag[n]==0):
                                     h_jpres.Fill( (tin.jp[n] - tin2.jp[k])/tin2.jp[k] )				
                                                     
@@ -230,40 +252,49 @@ if __name__ == '__main__':
 
 
 
-    fa = ROOT.TFile(inputFolder+"/radius"+jetRadius+"_of_PanPFA.root")
+    fa = ROOT.TFile(inputFolder+"/radius"+jetRadius+"_response.root")
     tg = fa.Get("tGEN")
-    tg_charged = fa.Get("tGEN_charged")
     tg_nonu    = fa.Get("tGEN_nonu")
     tg_response = fa.Get("tGEN_response")
+    tg_charged = fa.Get("tGEN_charged")
     tg_resolution = fa.Get("tGEN_resolution")
     ta = fa.Get("tPFA")
     tc = fa.Get("tcalo")
     tt = fa.Get("ttrack")
     tmc = fa.Get("tMC")
 
-    print "Getting hists..."
-    hg = getHists(sample,tg,tg,'_gen')
-    hg_charged = getHists(sample,tg_charged,tg,'_gen_charged')
-    hg_nonu    = getHists(sample,tg_nonu,tg,'_gen_nonu')
-    hg_response = getHists(sample,tg_response, tg,'_gen_response')
-    hg_resolution = getHists(sample,tg_resolution, tg,'_gen_resolution')
 
-    ha = getHists(sample,ta,tg,'_PF')
-    ht = getHists(sample,tt,tg,'_trk')	
-    hc = getHists(sample,tc,tg,'_calo')
+
+    ta = fa.Get("tPFA")
+    tc = fa.Get("tcalo")
+#    traw = fa.Get("trawhits")
+#    traw2 = fa.Get("trawhits2")
+    tt = fa.Get("ttrack")
+    tmc = fa.Get("tMC")
+
+    print "Getting hists..."
+    hg = getHists(sample,tg,tg_nonu,'_gen')
+    hg_nonu    = getHists(sample,tg_nonu,tg_nonu,'_gen_nonu')
+    hg_response = getHists(sample,tg_response, tg_nonu,'_gen_response')
+    hg_charged = getHists(sample,tg_charged,tg_nonu,'_gen_charged')
+    hg_resolution = getHists(sample,tg_resolution, tg_nonu,'_gen_resolution')
+
+    ha = getHists(sample,ta,tg_nonu,'_PF')
+    ht = getHists(sample,tt,tg_nonu,'_trk')	
+    hc = getHists(sample,tc,tg_nonu,'_calo')
+#    hraw = getHists(sample,traw,tg_nonu,'_raw')
+#    hraw2 = getHists(sample,traw2,tg_nonu,'_raw2')
 
     for i in range(len(ha)):
-        makeCanvas( sample, [hg_nonu[i],hg_response[i],hg_charged[i],hg_resolution[i], hc[i]],                         
-                    ['gen (no #nu)','gen response (no #nu)','gen (charged + #gamma)','gen response (charged+ #gamma)','calo (associated)'] )
+#        makeCanvas( sample, [hg_nonu[i],hg_response[i],hc[i], hraw[i], hraw2[i]],                         
+ #                   ['gen (no #nu)','gen response (no #nu)','calo clusters (PF)', 'calo hits (fastjet)', 'calo hits (simple)' ] )
+#        makeCanvas( sample, [hg_nonu[i],hg_response[i],hc[i], hraw2[i]],                         
+ #                   ['gen (no #nu)','gen response (no #nu)','calo clusters (PF)', 'calo hits (simple)' ] )
+        makeCanvas( sample, [hg_response[i],hg_charged[i],hg_resolution[i], hc[i]],                         
+                      ['gen response (no #nu)','gen (charged + #gamma)','gen response (charged+ #gamma)','PF calo'] )
 
     hmc = MCinfo(tmc);
 #        makeCanvas([hmc],['particlelevel'])
-
-#        hres_pf    = GetResolutions(ta,ta,tg, "pf" )
-#        hres_track = GetResolutions(tt,ta,tg, "track")
-#        hres_cal   = GetResolutions(tc,ta,tg, "calo" )
-#        makeCanvas( [hres_pf, hres_track, hres_cal], ['pf','track (associated)', 'calo (associated)'] )
-
 
 
 
