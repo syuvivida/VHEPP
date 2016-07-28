@@ -25,29 +25,25 @@ void angular(string inputDir, float radius=0.4, int mode=0){
   const float xmax= 0.2;
 
 
-  std::string name[]={"dphi","deta","dphi1","dphi2","deta1","deta2","signdR"};
+  std::string name[]={"dphi","deta","signdR"};
   std::string xtitle[]={"#Delta #phi", "#Delta #eta",
-			"#Delta #phi_{q1}",
-			"#Delta #phi_{q2}",
-			"#Delta #eta_{q1}",
-			"#Delta #eta_{q2}",
                         "Signed #Delta R"};
   
-  std::string ytitle=Form("Entries per %.3f",(xmax-xmin)/(float)nbins);
+  std::string ytitle=Form("Energy per %.3f [GeV]",(xmax-xmin)/(float)nbins);
   
 
   TH1F* h_dphi = new TH1F("h_dphi","",nbins,xmin,xmax);
   TProfile* h_pf = new TProfile("h_pf","",nbins,xmin,xmax);
   h_pf->SetYTitle(ytitle.data());
 
-  const int finenbins =100;
-  const float finexmin=mode==0? -0.025:-0.005;
-  const float finexmax=mode==0?  0.025:0.005;
+  const int finenbins =120; // 200
+  const float finexmin=mode==0? -0.2:-0.06;// -0.025:-0.005;
+  const float finexmax=mode==0? +0.2:+0.06;// 0.025:0.005;
 
 
   TH1F* h_fine = new TH1F("h_fine","",finenbins,finexmin,finexmax);
   TProfile* pf_fine = new TProfile("pf_fine","",finenbins,finexmin,finexmax);
-  ytitle=Form("Entries per %.4f",(finexmax-finexmin)/(float)finenbins);
+  ytitle=Form("Energy per %.4f",(finexmax-finexmin)/(float)finenbins);
   pf_fine->SetYTitle(ytitle.data());
 
   const unsigned int nhistos = sizeof(name)/sizeof(name[0]);

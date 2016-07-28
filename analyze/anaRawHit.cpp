@@ -107,13 +107,10 @@ std::vector<float> jmass_sd;
 //hit-level ntuple
 int nhits;
 std::vector<float> genMEta; // mother eta
-std::vector<float> gendrqq;
 std::vector<float> hitdphi;   
 std::vector<float> hitdeta;   
-std::vector<float> hitdphi1;
-std::vector<float> hitdphi2;
-std::vector<float> hitdeta1;
-std::vector<float> hitdeta2;
+std::vector<float> hitdphi12;
+std::vector<float> hitdeta12;
 std::vector<float> hitsigndR;
 std::vector<int> hitindex;  
 std::vector<int> hitdec;    
@@ -156,13 +153,10 @@ void clearVectors(){
 
   nhits = 0;
   genMEta.clear();
-  gendrqq.clear();
   hitdphi.clear();
   hitdeta.clear();
-  hitdphi1.clear();
-  hitdphi2.clear();
-  hitdeta1.clear();
-  hitdeta2.clear();
+  hitdphi12.clear();
+  hitdeta12.clear();
   hitsigndR.clear();
   hitindex.clear();
   hitdec.clear();
@@ -292,13 +286,10 @@ int main (int argc, char **argv) {
     TTree* hittuple = new TTree("hittuple","Tree with calo hits");
     hittuple->Branch("nhits", &nhits);
     hittuple->Branch("genMEta",&genMEta);
-    hittuple->Branch("gendrqq", &gendrqq);
     hittuple->Branch("hitdphi", &hitdphi);
     hittuple->Branch("hitdeta", &hitdeta);
-    hittuple->Branch("hitdphi1", &hitdphi1);
-    hittuple->Branch("hitdphi2", &hitdphi2);
-    hittuple->Branch("hitdeta1", &hitdeta1);
-    hittuple->Branch("hitdeta2", &hitdeta2);
+    hittuple->Branch("hitdphi12", &hitdphi12);
+    hittuple->Branch("hitdeta12", &hitdeta12);
     hittuple->Branch("hitsigndR", &hitsigndR);
     hittuple->Branch("hitindex", &hitindex);
     hittuple->Branch("hitdec", &hitdec);
@@ -310,7 +301,6 @@ int main (int argc, char **argv) {
     TTree* fjtuple = new TTree("fjtuple","Tree with calo hits from fastjet");
     fjtuple->Branch("nhits", &nhits);
     fjtuple->Branch("genMEta",&genMEta);
-    fjtuple->Branch("gendrqq", &gendrqq);
     fjtuple->Branch("hitdphi", &hitdphi);
     fjtuple->Branch("hitdeta", &hitdeta);
     fjtuple->Branch("hitindex", &hitindex);
@@ -447,7 +437,7 @@ int main (int argc, char **argv) {
 	std::cout << "ctr = " << ctr << std::endl;
 
 	if(fin.eof()) break;
-	//	if(ctr==10)break;
+	//	if(ctr==2)break;
     }
 
     f->cd();
@@ -1019,8 +1009,21 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	//	cout << "W " << iw  << " " << w[iw].px() << " " << w[iw].py() << " " << w[iw].pz() << endl;	
 	bool isISRPhoton=false;
 	for(unsigned int k =0; k < ISRPhotons.size(); k++){
-	
-	  double dr = sqrt( pow(ISRPhotons[k].phi()-w[iw].phi(),2) + pow(ISRPhotons[k].eta()-w[iw].eta(),2) );
+
+	  TLorentzVector temp_pho(0,0,0,0);
+	  temp_pho.SetPxPyPzE(ISRPhotons[k].px(),
+			      ISRPhotons[k].py(),
+			      ISRPhotons[k].pz(),
+			      ISRPhotons[k].e());
+
+	  TLorentzVector temp_jet(0,0,0,0);
+	  temp_jet.SetPxPyPzE(w[iw].px(),
+			      w[iw].py(),
+			      w[iw].pz(),
+			      w[iw].e());
+	    
+	  double dr = temp_pho.DeltaR(temp_jet);
+
 	  if(dr < jetRadius)
 	    {
 	      isISRPhoton=true;
@@ -1035,25 +1038,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	}
 
       } // end loop of generator-level W
-      
-
-
-
-//       cout << "debugging " << endl;
-      float gen_drqq[2]={-9999,-9999};
-
-      for(int eiko=0; eiko<2; eiko++)
-	{
-// 	  for(int ab=0; ab<2; ab++)
-// 	    cout << quarks[eiko][ab].user_index() << " " << quarks[eiko][ab].px() << " " << quarks[eiko][ab].py() << " " << quarks[eiko][ab].pz() << endl;
-	  if(quarks[eiko][0].e()<1e-6)continue;
-	  if(quarks[eiko][1].e()<1e-6)continue;
-	  float dr = sqrt( pow(quarks[eiko][0].phi()-quarks[eiko][1].phi(),2)+
-			   pow(quarks[eiko][0].eta()-quarks[eiko][1].eta(),2)
-			   );
-	  gen_drqq[eiko] = dr;
-	  
-	}
+    
       if(w[0].e()<1e-6 && w[1].e()<1e-6)
 	{
 	  std::cout << "W not found!" << std::endl;
@@ -1075,25 +1060,21 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	      if(w[iw].e()<1e-6)continue;
 	      if(used)continue;
 
-// 	      std::cout << w[iw].px() << " " << w[iw].py() << " " << w[iw].pz() << std::endl;
-// 	      cout << quarks[iw][0].user_index() << " " << quarks[iw][0].px() << " " << quarks[iw][0].py() << " " << quarks[iw][0].pz() << endl;
-// 	      cout << quarks[iw][1].user_index() << " " << quarks[iw][1].px() << " " << quarks[iw][1].py() << " " << quarks[iw][1].pz() << endl;
+//  	      std::cout << w[iw].px() << " " << w[iw].py() << " " << w[iw].pz() << std::endl;
+//  	      cout << quarks[iw][0].user_index() << " " << quarks[iw][0].px() << " " << quarks[iw][0].py() << " " << quarks[iw][0].pz() << endl;
+//  	      cout << quarks[iw][1].user_index() << " " << quarks[iw][1].px() << " " << quarks[iw][1].py() << " " << quarks[iw][1].pz() << endl;
 
-	      double dphi = particles[i].phi()-w[iw].phi();
+	      double dphi = TVector2::Phi_mpi_pi(particles[i].phi()-w[iw].phi());
 	      double deta = particles[i].eta()-w[iw].eta();
 
-	      double dphi1 = particles[i].phi()-quarks[iw][0].phi();
-	      double dphi2 = particles[i].phi()-quarks[iw][1].phi();
-
-	      double deta1 = particles[i].eta()-quarks[iw][0].eta();
-	      double deta2 = particles[i].eta()-quarks[iw][1].eta();
-
-	      double dphiq12 = quarks[iw][0].phi()-quarks[iw][1].phi();
+	      double dphiq12 = TVector2::Phi_mpi_pi(quarks[iw][0].phi()-quarks[iw][1].phi());
 	      double detaq12 = quarks[iw][0].eta()-quarks[iw][1].eta();
 
-	      double signedDR = detaq12*deta + dphiq12*dphi; 
-// 	      cout << "deta = " << deta << " dphi = " << dphi << endl;
-// 	      std::cout << "signedDR= " << signedDR << std::endl;
+	      double signedDR = (detaq12*deta + dphiq12*dphi)/sqrt(detaq12*detaq12+dphiq12*dphiq12); 
+//  	      cout << "deta = " << deta << " dphi = " << dphi << endl;
+// 	      cout << "dphi = " << particles[i].phi()-w[iw].phi() << endl;
+// 	      cout << "signedDR = " << signedDR << "\t" << (detaq12*deta + dphiq12*dphi) << endl;
+
 
 	      TLorentzVector a_temp(0,0,0,0);
 	      TLorentzVector b_temp(0,0,0,0);
@@ -1121,14 +1102,11 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	      Wjet[iw] += particles[i];
 	      nhits++;
 	      genMEta.push_back(w[iw].eta());
-	      gendrqq.push_back(gen_drqq[iw]);
 	      hitdphi.push_back(dphi);
 	      hitdeta.push_back(deta);
 
-	      hitdphi1.push_back(dphi1);
-	      hitdphi2.push_back(dphi2);
-	      hitdeta1.push_back(deta1);
-	      hitdeta2.push_back(deta2);
+	      hitdphi12.push_back(dphiq12);
+	      hitdeta12.push_back(detaq12);
 
 	      hitsigndR.push_back(signedDR);
 
@@ -1213,8 +1191,20 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	// check if this jet is matched to an ISR photon
 	bool isISRPhoton=false;
 	for(unsigned int k =0; k < ISRPhotons.size(); k++){
+	  TLorentzVector temp_pho(0,0,0,0);
+	  temp_pho.SetPxPyPzE(ISRPhotons[k].px(),
+			      ISRPhotons[k].py(),
+			      ISRPhotons[k].pz(),
+			      ISRPhotons[k].e());
+
+	  TLorentzVector temp_jet(0,0,0,0);
+	  temp_jet.SetPxPyPzE(out_jets[i].px(),
+			      out_jets[i].py(),
+			      out_jets[i].pz(),
+			      out_jets[i].e());
+	    
+	  double dr = temp_pho.DeltaR(temp_jet);
 	
-	  double dr = sqrt( pow(ISRPhotons[k].phi()-out_jets[i].phi(),2) + pow(ISRPhotons[k].eta()-out_jets[i].eta(),2) );
 	  double Eratio = ISRPhotons[k].E()>1e-6? out_jets[i].E()/ISRPhotons[k].E(): -1;
 	  if(dr < 0.1 && Eratio > 0.7 && Eratio < 1.3)
 	    {
@@ -1231,7 +1221,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	if(counter%NJOBS==4)
 	  {
 	    for(unsigned int jc = 0; jc < out_jets[i].constituents().size(); jc++){	      
-	      double dphi = out_jets[i].constituents()[jc].phi()-out_jets[i].phi();
+	      double dphi = TVector2::Phi_mpi_pi(out_jets[i].constituents()[jc].phi()-out_jets[i].phi());
 	      double deta = out_jets[i].constituents()[jc].eta()-out_jets[i].eta();
 	      nhits++;
 	      genMEta.push_back(out_jets[i].eta());
@@ -1252,7 +1242,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	for (unsigned int j = 0; j < MCparticles.size(); j++){
 	  // std::cout << "MCparticles = " << MCparticles[j].pt() << "," << MCparticles[j].user_index() << std::endl;
 	  double pdgid =  fabs(MCparticles[j].user_index());
-	  double dr = sqrt( pow(MCparticles[j].phi()-out_jets[i].phi(),2) + pow(MCparticles[j].eta()-out_jets[i].eta(),2) );
+	  double dr = sqrt( pow(TVector2::Phi_mpi_pi(MCparticles[j].phi()-out_jets[i].phi()),2) + pow(MCparticles[j].eta()-out_jets[i].eta(),2) );
 	  // std::cout << "dr = " << dr << "," << pdgid << std::endl;
 	  if (minDR > dr && (fabs(pdgid)==11 || fabs(pdgid)==13 || fabs(pdgid)==15) ){ minDR = dr; }
 	}
