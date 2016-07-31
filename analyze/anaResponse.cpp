@@ -697,14 +697,14 @@ void readEventGEN_response( std::vector< fastjet::PseudoJet > &allParticles ){
 	  break;
 	case 22: case 11:
 	  response = 1;
-	  RMS=(0.15/sqrt(e) + 0.01)*response;
+	  RMS=sqrt(pow(0.15/sqrt(e),2) + 0.01*0.01)*response;
 	  break;
 	default:
 	  const float A = 1.00647e+00;
 	  const float B = -6.45952e+01;
 	  const float C = 5.68083e+01;
 	  response = A*TMath::Erf((e-B)/C);
-	  RMS=(0.38/sqrt(e) + 0.01)*response;	
+	  RMS=sqrt(pow(0.38/sqrt(e),2) + 0.01*0.01)*response;	
 	  break;
 	}
 
@@ -782,14 +782,14 @@ void readEventGEN_resolution( std::vector< fastjet::PseudoJet > &allParticles ){
 	  break;
 	case 22: case 11:
 	  response = 1;
-	  RMS=(0.15/sqrt(e) + 0.01)*response;
+	  RMS=sqrt(pow(0.15/sqrt(e),2) + 0.01*0.01)*response;
 	  break;
 	default:
 	  const float A = 1.00647e+00;
 	  const float B = -6.45952e+01;
 	  const float C = 5.68083e+01;
 	  response = A*TMath::Erf((e-B)/C);
-	  RMS=(0.38/sqrt(e) + 0.01)*response;	
+	  RMS=sqrt(pow(0.38/sqrt(e),2) + 0.01*0.01)*response;	
 	  break;
 	}
 
