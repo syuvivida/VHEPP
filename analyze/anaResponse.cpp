@@ -678,10 +678,8 @@ void readEventGEN_response( std::vector< fastjet::PseudoJet > &allParticles ){
 	float RMS = 0;
 	float response=1;
 
-	if(e<3)response=0;
+	if(e<3 && !(pdg== 130 || pdg==310 || pdg == 2112))response=0;
 
-// 	std::cout << "pdg = " << pdg << std::endl;
-//     	std::cout << "e = " << e << std::endl;
 
    	if(response<1e-6){
 	  if(finGEN_response.eof()) break;
@@ -704,7 +702,7 @@ void readEventGEN_response( std::vector< fastjet::PseudoJet > &allParticles ){
 	  const float B = -6.45952e+01;
 	  const float C = 5.68083e+01;
 	  response = A*TMath::Erf((e-B)/C);
-	  RMS=sqrt(pow(0.38/sqrt(e),2) + 0.01*0.01)*response;	
+	  RMS=sqrt(pow(0.38/sqrt(e),2) + 0.02*0.02)*response;	
 	  break;
 	}
 
@@ -755,7 +753,7 @@ void readEventGEN_resolution( std::vector< fastjet::PseudoJet > &allParticles ){
         }        
  	int pdg=abs(pdgid);
   	if(pdg== 12 || pdg== 14 || pdg== 16 
-	   || pdg== 130 || pdg == 2112 
+	   || pdg== 130 || pdg==310 || pdg == 2112 
 	   ){
 	  if(finGEN_resolution.eof()) break;
 	  else
@@ -789,7 +787,7 @@ void readEventGEN_resolution( std::vector< fastjet::PseudoJet > &allParticles ){
 	  const float B = -6.45952e+01;
 	  const float C = 5.68083e+01;
 	  response = A*TMath::Erf((e-B)/C);
-	  RMS=sqrt(pow(0.38/sqrt(e),2) + 0.01*0.01)*response;	
+	  RMS=sqrt(pow(0.38/sqrt(e),2) + 0.02*0.02)*response;	
 	  break;
 	}
 
