@@ -95,13 +95,16 @@ double gen_mWW;
 
 //jet-level ntuple
 std::vector<float> je;
+std::vector<float> jeecal;
+std::vector<float> jehcal;
+std::vector<float> jepho;
 std::vector<float> jpt;
 std::vector<float> jp;
 std::vector<float> jeta;
 std::vector<float> jphi;
 std::vector<float> jmass;
-std::vector<float> jmultiplicity;
-std::vector<float> jisleptag;
+std::vector<int> jmultiplicity;
+std::vector<bool> jisleptag;
 std::vector<float> jmass_sd;
 
 //hit-level ntuple
@@ -150,6 +153,10 @@ void clearVectors(){
   jmass_sd.clear();        
   jmultiplicity.clear();
   jisleptag.clear();
+  
+  jeecal.clear();
+  jehcal.clear();
+  jepho.clear();
 
   nhits = 0;
   genMEta.clear();
@@ -224,7 +231,10 @@ int main (int argc, char **argv) {
     finTrack.open(fnameTrack);
 
     char outName[192];
-    sprintf( outName, "%s/radius%.1f_rawhit.root", inputFolder.c_str(), jetRadius);
+    if(NJOBS==7)
+      sprintf( outName, "%s/radius%.1f_rawhit.root", inputFolder.c_str(), jetRadius);
+    else
+      sprintf( outName, "%s/radius%.1f_rawhit_fastjet.root", inputFolder.c_str(), jetRadius);
     TFile *f = TFile::Open(outName,"RECREATE");
 
     heta = new TH1F("heta","",200,-2.5,2.5);
@@ -274,6 +284,8 @@ int main (int argc, char **argv) {
     TTree *trawhits2 = new TTree("trawhits2","Tree with vectors");
     trawhits2->Branch("njets"          , &njets      );
     trawhits2->Branch("je"             , &je         );
+    trawhits2->Branch("jeecal"         , &jeecal     );
+    trawhits2->Branch("jehcal"         , &jehcal     );
     trawhits2->Branch("jpt"            , &jpt        );
     trawhits2->Branch("jp"             , &jp        );      
     trawhits2->Branch("jeta"           , &jeta       );
@@ -325,6 +337,7 @@ int main (int argc, char **argv) {
     TTree *tGEN = new TTree("tGEN","Tree with vectors");
     tGEN->Branch("njets"          , &njets      );
     tGEN->Branch("je"             , &je         );
+    tGEN->Branch("jepho"          , &jepho      );
     tGEN->Branch("jpt"            , &jpt        );
     tGEN->Branch("jp"             , &jp        );          
     tGEN->Branch("jeta"           , &jeta       );
@@ -339,6 +352,7 @@ int main (int argc, char **argv) {
     TTree *tGEN_nonu = new TTree("tGEN_nonu","Tree with vectors");
     tGEN_nonu->Branch("njets"          , &njets      );
     tGEN_nonu->Branch("je"             , &je         );
+    tGEN_nonu->Branch("jepho"          , &jepho      );
     tGEN_nonu->Branch("jpt"            , &jpt        );
     tGEN_nonu->Branch("jp"             , &jp        );          
     tGEN_nonu->Branch("jeta"           , &jeta       );
@@ -351,6 +365,7 @@ int main (int argc, char **argv) {
     TTree *tGEN_response = new TTree("tGEN_response","Tree with vectors");
     tGEN_response->Branch("njets"          , &njets      );
     tGEN_response->Branch("je"             , &je         );
+    tGEN_response->Branch("jepho"          , &jepho      );
     tGEN_response->Branch("jpt"            , &jpt        );
     tGEN_response->Branch("jp"             , &jp        );          
     tGEN_response->Branch("jeta"           , &jeta       );
@@ -381,9 +396,8 @@ int main (int argc, char **argv) {
 	readEventTrack( allParticlesTrack);
 
         // std::cout << "size of collection = " << allParticles.size() << "," << allParticlesMC.size() << ", " << allParticlesCalo.size() << std::endl;
-        if (ctr > 0){
-	  
- 	    clearVectors();
+	if (ctr > 0){
+  	    clearVectors();
  	    analyzeEvent( allParticlesGEN, jetRadius, allParticlesMC );
 	    tGEN->Fill();
 	
@@ -433,11 +447,11 @@ int main (int argc, char **argv) {
 	allParticlesRawHits.clear();
  	allParticlesRawHits2.clear();
 
-        ctr++;
+	ctr++;
 	std::cout << "ctr = " << ctr << std::endl;
 
 	if(fin.eof()) break;
-	//	if(ctr==2)break;
+	//	if(ctr==2602)break;
     }
 
     f->cd();
@@ -998,7 +1012,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 
 	      }
 
-      }
+      } // end loop of MC particles
 
 
       // reset W if it overlaps with ISR photons
@@ -1042,6 +1056,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       if(w[0].e()<1e-6 && w[1].e()<1e-6)
 	{
 	  std::cout << "W not found!" << std::endl;
+	  counter++;
 	  return;
 	}
 
@@ -1049,9 +1064,9 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       Wjet[0].reset(0,0,0,0);
       Wjet[1].reset(0,0,0,0);
       int nPart[2]={0,0};
-      double ecale[2] = {0};
-      double hcale[2] = {0};
-
+      double ecale[2] = {0.,0.};
+      double hcale[2] = {0.,0.};
+    
       for(unsigned int i=0; i < particles.size(); i++)
 	{
 	  bool used = false;
@@ -1092,12 +1107,13 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	      used = true;
 	      if((int)particles[i].user_index()==0){
 		ecale[iw] += particles[i].e();
-		//		std::cout << "ECAL hit E = " << particles[i].e() << std::endl;
 	      }
 	      else if((int)particles[i].user_index()==1){
 		hcale[iw] += particles[i].e();
-		//		std::cout << "HCAL hit E = " << particles[i].e() << std::endl;
 	      }
+	      else
+		std::cout << "Warning!  user_index = " << particles[i].user_index() << std::endl;
+
 	      nPart[iw]++;
 	      Wjet[iw] += particles[i];
 	      nhits++;
@@ -1120,8 +1136,6 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	    } // end loop of W/Higgs boson
 	} // end loop of calo hits
 
-//       std::cout << "ECAL E0 : HCAL E0 = " << ecale[0] <<" : " << hcale[0] << std::endl;
-//       std::cout << "ECAL E1 : HCAL E1 = " << ecale[1] <<" : " << hcale[1] << std::endl;
 
       // filling clustered jet information
       for(unsigned int iw=0; iw < 2; iw++)
@@ -1129,6 +1143,8 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	  if(Wjet[iw].e()<1e-6)continue;
 	  njets++;
 	  je.push_back( Wjet[iw].e() );
+	  jeecal.push_back( ecale[iw] );
+	  jehcal.push_back( hcale[iw] );
 	  jpt.push_back( Wjet[iw].pt() );
 	  jp.push_back( sqrt(Wjet[iw].modp2()) );
 	  jeta.push_back( Wjet[iw].eta() );
@@ -1136,10 +1152,10 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	  jmass.push_back( Wjet[iw].m() );  
 	  jmass_sd.push_back( Wjet[iw].m() );        
 	  jmultiplicity.push_back(nPart[iw]);
-	  jisleptag.push_back(0);
+	  jisleptag.push_back(false);
 	}
 
-    } // if counter%NJOBS==NJOBS-1
+    } // if counter%NJOBS!=NJOBS-1
     else{
 
       int activeAreaRepeats = 1;
@@ -1237,7 +1253,21 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	
 	numGoodJets++;
 
-	double isleptag = 0;
+	
+	if(counter%NJOBS<3){
+
+	  double epho = 0;
+	  for (unsigned int ip = 0; ip < out_jets[i].constituents().size() ; ip++)
+	    {
+	      unsigned int pdg = abs(out_jets[i].constituents()[ip].user_index());
+	      if(pdg!=22)continue;
+	      epho +=out_jets[i].constituents()[ip].e();      
+	    }
+	  jepho.push_back(epho);
+
+	} // if this is filling generator-level information
+
+	bool isleptag = false;
 	double minDR = 9999.;
 	for (unsigned int j = 0; j < MCparticles.size(); j++){
 	  // std::cout << "MCparticles = " << MCparticles[j].pt() << "," << MCparticles[j].user_index() << std::endl;
@@ -1246,7 +1276,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	  // std::cout << "dr = " << dr << "," << pdgid << std::endl;
 	  if (minDR > dr && (fabs(pdgid)==11 || fabs(pdgid)==13 || fabs(pdgid)==15) ){ minDR = dr; }
 	}
-	if (minDR < jetRadius){ isleptag = 1.; }
+	if (minDR < jetRadius){ isleptag = true; }
 	je.push_back( out_jets[i].E() );
 	jpt.push_back( out_jets[i].pt() );
 	jp.push_back( sqrt(out_jets[i].modp2()) );
@@ -1254,12 +1284,12 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	jphi.push_back( out_jets[i].phi() );
 	jmass.push_back( out_jets[i].m() );  
 	jmass_sd.push_back( soft_drop_mmdt( out_jets.at(i) ).m() );        
-	jmultiplicity.push_back( (float) out_jets.at(i).constituents().size() );
+	jmultiplicity.push_back( out_jets.at(i).constituents().size() );
 	jisleptag.push_back( isleptag );
       
-      }
+      } // loop over out_jets
 
-    njets = numGoodJets;
+      njets = numGoodJets;
 
     } // itcounter%NJOBS!=NJOBS-1
     counter++;    
