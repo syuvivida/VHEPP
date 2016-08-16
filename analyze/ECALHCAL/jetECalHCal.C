@@ -30,18 +30,21 @@ float FWHM(TH1F* hist)
 
 void jetECalHcal(string inputDir, float radius=0.4, bool corr=false){
 
-  const float xmin=0.6;
-  const float xmax=1.1;
+  vector<float> jeratio_vec;
+
+  const float xmin=0.5;
+  const float xmax=1.5;
   TH1F* h_jeratio = new TH1F("h_jeratio", "", 50,xmin,xmax);
   h_jeratio->SetXTitle("E_{jet}/E_{true}");
   if(corr)
     h_jeratio->SetXTitle("E_{jet}^{corr}/E_{true}");
 
-  TH1F* h_jeecalratio = new TH1F("h_jeecalratio", "", 100,0,5);
+  TH1F* h_jeecalratio = new TH1F("h_jeecalratio", "", 50,0.5,1.5);
   h_jeecalratio->SetXTitle("E_{jet}^{ECAL}/E_{pho}");
 
   TH1F* h_jehcalratio = new TH1F("h_jehcalratio", "", 50,0,2);
-  h_jehcalratio->SetXTitle("E_{jet}^{HCAL}/E_{other}");
+  //  h_jehcalratio->SetXTitle("E_{jet}^{HCAL}/E_{other}");
+  h_jehcalratio->SetXTitle("E_{jet}^{HCAL}/(E_{true}-E_{jet}^{ECAL})");
  
   TH2F* h_jeratio_phoratio = new TH2F("h_jeratio_phoratio","",50,0,1,50,0,2);
   h_jeratio_phoratio->SetXTitle("E_{pho}/E_{true}");
@@ -102,8 +105,7 @@ void jetECalHcal(string inputDir, float radius=0.4, bool corr=false){
       }
 
       if(findGenMatch<0)continue;
-      //      float ratio = corr? (calo_jeecal[i]+ calo_jehcal[i]/0.723074 )/gen_je[findGenMatch]:
-      float ratio = corr? (calo_jeecal[i]+ calo_jehcal[i]/0.4342 )/gen_je[findGenMatch]:
+      float ratio = corr? (calo_jeecal[i]+ calo_jehcal[i]/0.7632 )/gen_je[findGenMatch]:
 	(calo_jeecal[i]+ calo_jehcal[i])/gen_je[findGenMatch];
 
       float phoratio = gen_jepho[findGenMatch]/gen_je[findGenMatch];
@@ -113,25 +115,56 @@ void jetECalHcal(string inputDir, float radius=0.4, bool corr=false){
 
       h_jeecalratio->Fill(calo_jeecal[i]/gen_jepho[findGenMatch]);
 
-      h_jehcalratio->Fill(calo_jehcal[i]/(gen_je[findGenMatch]-gen_jepho[findGenMatch]));
+      //      h_jehcalratio->Fill(calo_jehcal[i]/(gen_je[findGenMatch]-gen_jepho[findGenMatch]));
+
+      h_jehcalratio->Fill(calo_jehcal[i]/(gen_je[findGenMatch]-calo_jeecal[i]));
 
       h_jeratio_phoratio->Fill(phoratio,ratio);
       pf_jeratio_phoratio->Fill(phoratio,ratio);
 
+      jeratio_vec.push_back(ratio);
 
     } // end of loop over calo jets
   } // end loop of tries
       
 
+  std::sort(jeratio_vec.begin(),jeratio_vec.end());
+  unsigned int size_temp = jeratio_vec.size();
+  const float removal=0.1;
+  unsigned int n_temp_to_be_removed = removal*0.5*size_temp;
+  // remove the first 5%                         
+  jeratio_vec.erase(jeratio_vec.begin(),jeratio_vec.begin()+n_temp_to_be_removed);
+  // remove the last 5%
+  jeratio_vec.erase(jeratio_vec.end()-n_temp_to_be_removed,jeratio_vec.end());
+  double nsamples = jeratio_vec.size();
+  double sum = std::accumulate(jeratio_vec.begin(), jeratio_vec.end(), 0.0);
+  double mean90 = sum / nsamples;
 
-  TFile* outFile = new TFile(Form("radius%.1f_ECALHCAL.root",radius),"recreate");
+  double sq_sum = std::inner_product(jeratio_vec.begin(), jeratio_vec.end(), jeratio_vec.begin(), 0.0);
+  double RMS90 = std::sqrt(sq_sum / nsamples - mean90 * mean90);
+
+
+  cout << "Mean90 = " << mean90 << " +- " << RMS90/sqrt(nsamples) << endl;
+  cout << "RMS90 = " << RMS90 << " +- " << RMS90/sqrt(2*nsamples) << endl;
+
+
+  std::string outputFileName = corr? Form("radius%.1f_ECALHCAL_corr.root",radius):
+    Form("radius%.1f_ECALHCAL.root",radius);
+
+    TFile* outFile = new TFile(outputFileName.data(),"recreate");
   h_jeratio->Write();
   h_jeecalratio->Write();
   h_jehcalratio->Write();
   h_jeratio_phoratio->Write();
   pf_jeratio_phoratio->Write();
   outFile->Close();
-  cout << "RMS = " << h_jeratio->GetRMS() << endl;
+
+  cout << "Mean = " << h_jeratio->GetMean() 
+       << " +- " << h_jeratio->GetMeanError() << endl;
+
+  cout << "RMS = " << h_jeratio->GetRMS() 
+       << " +- " << h_jeratio->GetRMSError() << endl;
+
   cout << "FWHM= " << FWHM(h_jeratio) << endl;
 
   
