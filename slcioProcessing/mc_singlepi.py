@@ -66,8 +66,9 @@ for f in files:
 		colPF  = evt.getCollection("PandoraPFOCollection");
 		colCl  = evt.getCollection("ReconClusters");
 		colTr  = evt.getCollection("Tracks");
-		colECB = evt.getCollection("EcalBarrelHits");
-                colHCB = evt.getCollection("HcalBarrelHits");
+                colECB = evt.getCollection("EM_BARREL");
+                colHCB = evt.getCollection("HAD_BARREL");
+
 
 		nMc=col.getNumberOfElements();
 		nPF=colPF.getNumberOfElements();
@@ -123,14 +124,19 @@ for f in files:
 			parCl = colCl.getElementAt(i);
 			fileOutClusters.write( '{0:3} {1:4.4f} {2:4.4f} {3:4.4f} {4:4.4f} \n'.format(parCl.getType(),parCl.getPosition()[0],parCl.getPosition()[1],parCl.getPosition()[2],parCl.getEnergy()) )
 
-#		for i in range(nECB):
-#			parCl = colECB.getElementAt(i);
-#			fileOutECaloR.write( '{0:3} {1:4.4f} {2:4.4f} {3:4.4f} {4:4.4f} \n'.format(0,parCl.getPosition()[0],parCl.getPosition()[1],parCl.getPosition()[2],parCl.getEnergy()) )
+                totalee = 0
+                totalhe = 0
+        
+		for i in range(nECB):
+			parCl = colECB.getElementAt(i);
+			fileOutECaloR.write( '{0:3} {1:4.4f} {2:4.4f} {3:4.4f} {4:4.4f} \n'.format(0,parCl.getPosition()[0],parCl.getPosition()[1],parCl.getPosition()[2],parCl.getEnergy()) )
+#                        totalee += parCl.getEnergy()
+		for i in range(nHCB):
+			parCl = colHCB.getElementAt(i);
+			fileOutHCaloR.write( '{0:3} {1:4.4f} {2:4.4f} {3:4.4f} {4:4.4f} \n'.format(1,parCl.getPosition()[0],parCl.getPosition()[1],parCl.getPosition()[2],parCl.getEnergy()) )
+#                        totalhe += parCl.getEnergy()
 
-#		for i in range(nHCB):
-#			parCl = colHCB.getElementAt(i);
-#			fileOutHCaloR.write( '{0:3} {1:4.4f} {2:4.4f} {3:4.4f} {4:4.4f} \n'.format(1,parCl.getPosition()[0],parCl.getPosition()[1],parCl.getPosition()[2],parCl.getEnergy()) )
-
+#                print totalee, totalhe, totalee+totalhe
 
 #		if nEvent > 10: break;
 reader.close() # close the file
