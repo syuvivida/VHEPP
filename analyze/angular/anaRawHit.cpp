@@ -979,6 +979,15 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
             if (pdgid == -24){
                 w[1].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
             }
+	    // for Z'->qq in mu mu collider
+            if (pdgid>=1 && pdgid <=5){         
+                w[0].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+            if (pdgid>=-5 && pdgid<=-1){
+                w[1].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+            }
+	    
+	    
             if (pdgid == 25 && w[0].e()<1e-6){         
                 w[0].reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
             }
