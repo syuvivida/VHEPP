@@ -35,16 +35,21 @@ void jetResponse(string inputDir, float radius=0.4){
   
   const int nbins=4;
   TH1F* h_jeratiobin[nbins];
-  for(unsigned int i=0; i<nbins; i++)
+  for(int i=0; i<nbins; i++)
     h_jeratiobin[i] = (TH1F*)h_jeratio->Clone(Form("h_jeratiobin%d",i));
   
+  const float xlows[nbins+1]={0,1000,5500,12000,42000};
 
-  TH1F* h_je = new TH1F("h_je","",nbins,2500,22500);
+  float sumEntries[nbins]={0,0,0};
+  float numEntries[nbins]={0,0,0};
+  float xcenter[nbins]={0,0,0};
+
+  TH1F* h_je = new TH1F("h_je","",nbins,xlows);
   TH1F* h_jebin[nbins];
-  for(unsigned int i=0; i<nbins; i++){
+  for(int i=0; i<nbins; i++){
     h_jebin[i] = (TH1F*)h_je->Clone(Form("h_jebin%d",i));
   }
-  string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_of_PanPFA.root";
+  string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_response.root";
   cout << "opening " << inputFile.data() << endl;
   TreeReader genTree(inputFile.data(),"tGEN_nonu");
   TreeReader caloTree(inputFile.data(),"tcalo");
@@ -60,57 +65,65 @@ void jetResponse(string inputDir, float radius=0.4){
     Float_t*  gen_je = genTree.GetPtrFloat("je");
     Float_t*  gen_jeta = genTree.GetPtrFloat("jeta");
     Float_t*  gen_jphi = genTree.GetPtrFloat("jphi");
-    Float_t*  gen_jislep = genTree.GetPtrFloat("jisleptag");
+    vector<bool> &gen_jislep = *((vector<bool>*) genTree.GetPtr("jisleptag"));
+
+
     Int_t     gen_njets = genTree.GetInt("njets");
 
     Float_t*  calo_je = caloTree.GetPtrFloat("je");
     Float_t*  calo_jeta = caloTree.GetPtrFloat("jeta");
     Float_t*  calo_jphi = caloTree.GetPtrFloat("jphi");
-    Float_t*  calo_jislep = caloTree.GetPtrFloat("jisleptag");
+    vector<bool> &calo_jislep = *((vector<bool>*) caloTree.GetPtr("jisleptag"));
     Int_t     calo_njets    = caloTree.GetInt("njets");
 
-    for(unsigned int i=0; i< calo_njets; i++){
+    for(int i=0; i< calo_njets; i++){
 
-      cout << jEntry << "\t" << calo_je[i] << "\t" << gen_je[i] << endl;
-
+      
       if(fabs(calo_jeta[i])>1.1)continue;
-      if(calo_jislep[i]>1e-6)continue;
+      if(calo_jislep[i])continue;
 
       int findGenMatch=-1;
-      for(unsigned int k=0; k< gen_njets; k++){
+      for(int k=0; k< gen_njets; k++){
 	
 	
-	float dr = sqrt(pow(gen_jeta[k]-calo_jeta[i],2)+
-			pow(gen_jphi[k]-calo_jphi[i],2));
+ 	float dr = sqrt(pow(gen_jeta[k]-calo_jeta[i],2)+
+ 			pow(gen_jphi[k]-calo_jphi[i],2));
 
-	if(dr<0.1)
-	  {
-	    findGenMatch=k;
-	    break;
-	  }
+ 	if(dr<0.1)
+ 	  {
+ 	    findGenMatch=k;
+ 	    break;
+ 	  }
       }
 
       if(findGenMatch<0)continue;
       float ratio=calo_je[i]/gen_je[findGenMatch];
       h_jeratio->Fill(ratio);
       int bin = h_je->FindBin(gen_je[findGenMatch]);
+      cout << "e = " << gen_je[findGenMatch] << " bin = " << bin << endl;
+
       if(bin==0)continue;
       if(bin>nbins)bin=nbins;
+
       bin=bin-1;
       h_jebin[bin]->Fill(gen_je[findGenMatch]);
       h_jeratiobin[bin]->Fill(ratio);
-      if(ratio>=xmin && ratio<=xmax)
-	jeratio_vec[bin].push_back(ratio);
-    } // end of loop over calo jets
-  } // end loop of tries
-      
 
+      sumEntries[bin] += gen_je[findGenMatch];
+      numEntries[bin] += 1;
+
+      if(ratio>=xmin && ratio<=xmax)
+ 	jeratio_vec[bin].push_back(ratio);
+    } // end of loop over calo jets
+  } // end loop of entries
+     
+  
   // sort the vector of jeratio first
-  for(unsigned int i=0; i<nbins; i++)
+  for(int i=0; i<nbins; i++)
     std::sort(jeratio_vec[i].begin(),jeratio_vec[i].end());
 
   // erase elements in the vectors
-  for(unsigned int i=0; i<nbins; i++)
+  for(int i=0; i<nbins; i++)
     {
       unsigned int size_temp = jeratio_vec[i].size();
       unsigned int n_temp_to_be_removed = removal*0.5*size_temp;
@@ -135,6 +148,8 @@ void jetResponse(string inputDir, float radius=0.4){
   float y5[nbins], y5err[nbins];
   float y6[nbins], y6err[nbins];
   float xerr[nbins];
+  float yrms90[nbins],yrms90err[nbins];
+  float ymean90[nbins],ymean90err[nbins];
 
   TH1F* h_Mean = (TH1F*)h_je->Clone("h_Mean");
   h_Mean->Reset();
@@ -147,13 +162,18 @@ void jetResponse(string inputDir, float radius=0.4){
   TH1F* h_RMS90 = (TH1F*)h_je->Clone("h_RMS90");
   h_RMS90->Reset();
 
+
+
   
-  for(unsigned int i=0; i<nbins; i++){
+  for(int i=0; i<nbins; i++){
     h_jeratiobin[i]  ->Write();
     h_jebin[i]->Write();
 
-    x[i]  = h_je->GetBinCenter(i+1);
-    xerr[i] = h_je->GetBinWidth(i+1)*0.5;
+    xcenter[i] = numEntries[i]>0? sumEntries[i]/numEntries[i]: h_je->GetBinCenter(i+1);
+    cout << "xcenter of bin " << i << " = " << xcenter[i] << endl;
+    x[i]  = xcenter[i];
+    xerr[i] = TMath::Min(fabs(h_je->GetBinLowEdge(i+1)-xcenter[i]),
+			 fabs(h_je->GetBinLowEdge(i+2)-xcenter[i]));
 
     y1[i] = h_jeratiobin[i]->GetRMS();
     y1err[i] = h_jeratiobin[i]->GetRMSError();
@@ -191,9 +211,14 @@ void jetResponse(string inputDir, float radius=0.4){
     double sq_sum = std::inner_product(jeratio_vec[i].begin(), jeratio_vec[i].end(), jeratio_vec[i].begin(), 0.0);
     double RMS90 = std::sqrt(sq_sum / nsamples - mean90 * mean90);
 
+    ymean90[i]    = mean90;
+    ymean90err[i] = RMS90/sqrt(nsamples);
 
     h_Mean90->SetBinContent(i+1,mean90);
     h_Mean90->SetBinError(i+1, RMS90/sqrt(nsamples));
+
+    yrms90[i]     = RMS90;
+    yrms90err[i]  = RMS90/sqrt(2*nsamples);
 
     h_RMS90->SetBinContent(i+1,RMS90);
     h_RMS90->SetBinError(i+1, RMS90/sqrt(2*nsamples));
@@ -239,6 +264,36 @@ void jetResponse(string inputDir, float radius=0.4){
   h_RMS90->Write();
 
 
+  TGraphErrors* gr_RMS90 = new TGraphErrors(nbins,x,yrms90,xerr,yrms90err);
+  gr_RMS90->SetName("gr_RMS90");
+  gr_RMS90->SetTitle("");
+  gr_RMS90->GetXaxis()->SetTitle("E_{true} [GeV]");
+  gr_RMS90->GetYaxis()->SetTitle("RMS^{90} of E_{jet}/E_{true}");
+  gr_RMS90->Draw("ACP");
+  gr_RMS90->SetMarkerStyle(8);
+  gr_RMS90->SetMarkerSize(1);
+  gr_RMS90->GetXaxis()->SetTitleSize(0.05);
+  gr_RMS90->GetYaxis()->SetTitleSize(0.05);
+  gr_RMS90->GetXaxis()->SetNdivisions(5);
+  gr_RMS90->GetYaxis()->SetTitleOffset(1.2);
+  gr_RMS90->GetYaxis()->SetDecimals();
+
+
+
+  TGraphErrors* gr_Mean90 = new TGraphErrors(nbins,x,ymean90,xerr,ymean90err);
+  gr_Mean90->SetName("gr_Mean90");
+  gr_Mean90->SetTitle("");
+  gr_Mean90->GetXaxis()->SetTitle("E_{true} [GeV]");
+  gr_Mean90->GetYaxis()->SetTitle("Mean^{90} of E_{jet}/E_{true}");
+  gr_Mean90->Draw("ACP");
+  gr_Mean90->SetMarkerStyle(8);
+  gr_Mean90->SetMarkerSize(1);
+  gr_Mean90->GetXaxis()->SetTitleSize(0.05);
+  gr_Mean90->GetYaxis()->SetTitleSize(0.05);
+  gr_Mean90->GetXaxis()->SetNdivisions(5);
+  gr_Mean90->GetYaxis()->SetTitleOffset(1.2);
+  gr_Mean90->GetYaxis()->SetDecimals();
+
   TGraphErrors* gr_RMS = new TGraphErrors(nbins,x,y1,xerr,y1err);
   gr_RMS->SetName("gr_RMS");
   gr_RMS->SetTitle("");
@@ -250,9 +305,9 @@ void jetResponse(string inputDir, float radius=0.4){
   gr_RMS->GetXaxis()->SetTitleSize(0.05);
   gr_RMS->GetYaxis()->SetTitleSize(0.05);
   gr_RMS->GetXaxis()->SetNdivisions(5);
-  //  gr_RMS->GetXaxis()->SetTitleOffset(1.2);
   gr_RMS->GetYaxis()->SetTitleOffset(1.2);
   gr_RMS->GetYaxis()->SetDecimals();
+
 
   TGraph* gr_FWHM = new TGraph(nbins,x,y2);
   gr_FWHM->SetName("gr_FWHM");
@@ -296,7 +351,7 @@ void jetResponse(string inputDir, float radius=0.4){
   gr_Peak->GetXaxis()->SetTitleSize(0.05);
   gr_Peak->GetYaxis()->SetTitleSize(0.05);
   gr_Peak->GetXaxis()->SetNdivisions(5);
-//   gr_Peak->GetXaxis()->SetTitleOffset(1.2);
+  //   gr_Peak->GetXaxis()->SetTitleOffset(1.2);
   gr_Peak->GetYaxis()->SetTitleOffset(1.2);
   gr_Peak->GetYaxis()->SetDecimals();
 
@@ -332,6 +387,9 @@ void jetResponse(string inputDir, float radius=0.4){
 
 
 
+  gr_RMS90->Write();
+  gr_Mean90->Write();
+
   gr_RMS->Write();
   gr_FWHM->Write();
   gr_Peak->Write();
@@ -341,7 +399,6 @@ void jetResponse(string inputDir, float radius=0.4){
   gr_GausSigma->Write();
 
   outFile->Close();
-
   
 
 }

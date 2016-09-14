@@ -91,8 +91,8 @@ std::vector<float> jp;
 std::vector<float> jeta;
 std::vector<float> jphi;
 std::vector<float> jmass;
-std::vector<float> jmultiplicity;
-std::vector<float> jisleptag;
+std::vector<int> jmultiplicity;
+std::vector<bool> jisleptag;
 std::vector<float> jmass_sd;
 std::vector<float> jmass_pr;
 std::vector<float> costheta1;
@@ -421,7 +421,7 @@ int main (int argc, char **argv) {
 	std::cout << "ctr = " << ctr << std::endl;
 
 	if(fin.eof()) break;
-	//	if(ctr==100)break;
+	//	if(ctr==10)break;
     }
 
     f->cd();
@@ -678,7 +678,7 @@ void readEventGEN_response( std::vector< fastjet::PseudoJet > &allParticles ){
 	float RMS = 0;
 	float response=1;
 
-	if(e<3 && !(pdg== 130 || pdg==310 || pdg == 2112))response=0;
+	if(e<2 && !(pdg== 130 || pdg==310 || pdg == 2112))response=0;
 
 
    	if(response<1e-6){
@@ -698,14 +698,16 @@ void readEventGEN_response( std::vector< fastjet::PseudoJet > &allParticles ){
 	  RMS=sqrt(pow(0.15/sqrt(e),2) + 0.01*0.01)*response;
 	  break;
 	default:
-	  const float A = 1.00647e+00;
-	  const float B = -6.45952e+01;
-	  const float C = 5.68083e+01;
-	  response = A*TMath::Erf((e-B)/C);
-	  RMS=sqrt(pow(0.38/sqrt(e),2) + 0.02*0.02)*response;	
+	  if(e<16)
+	    response = 0.7 + 0.077*log(e);
+	  else if(e>=16 && e<2000)
+	    response = 0.86 + 0.0202*log(e);
+	  else if(e>2000)
+	    response = 1.0;
+	  RMS=sqrt(pow(0.43/sqrt(e),2) + 0.009*0.009)*response;	
 	  break;
 	}
-
+	
 
    	if(response<1e-6){
 	  if(finGEN_response.eof()) break;
@@ -764,7 +766,7 @@ void readEventGEN_resolution( std::vector< fastjet::PseudoJet > &allParticles ){
 	float RMS = 0;
 	float response=1;
 
-	if(e<3)response=0;
+	if(e<2)response=0;
 
    	if(response<1e-6){
 	  if(finGEN_response.eof()) break;
@@ -783,14 +785,17 @@ void readEventGEN_resolution( std::vector< fastjet::PseudoJet > &allParticles ){
 	  RMS=sqrt(pow(0.15/sqrt(e),2) + 0.01*0.01)*response;
 	  break;
 	default:
-	  const float A = 1.00647e+00;
-	  const float B = -6.45952e+01;
-	  const float C = 5.68083e+01;
-	  response = A*TMath::Erf((e-B)/C);
-	  RMS=sqrt(pow(0.38/sqrt(e),2) + 0.02*0.02)*response;	
+	  if(e<16)
+	    response = 0.7 + 0.077*log(e);
+	  else if(e>=16 && e<2000)
+	    response = 0.86 + 0.0202*log(e);
+	  else if(e>2000)
+	    response = 1.0;
+	  RMS=sqrt(pow(0.43/sqrt(e),2) + 0.009*0.009)*response;	
 	  break;
 	}
 
+	//	std::cout << pdg << "\t" << e << "\t" << response << "\t" << RMS << endl;
 
    	if(response<1e-6){
 	  if(finGEN_response.eof()) break;
@@ -985,7 +990,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       if(isISRPhoton)continue;
       numGoodJets++;
 
-      double isleptag = 0;
+      bool isleptag = false;
       double minDR = 9999.;
       for (unsigned int j = 0; j < MCparticles.size(); j++){
 	// std::cout << "MCparticles = " << MCparticles[j].pt() << "," << MCparticles[j].user_index() << std::endl;
@@ -994,7 +999,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	// std::cout << "dr = " << dr << "," << pdgid << std::endl;
 	if (minDR > dr && (fabs(pdgid)==11 || fabs(pdgid)==13 || fabs(pdgid)==15) ){ minDR = dr; }
       }
-      if (minDR < jetRadius){ isleptag = 1.; }
+      if (minDR < jetRadius){ isleptag = true; }
       je.push_back( out_jets[i].E() );
       jpt.push_back( out_jets[i].pt() );
       jp.push_back( sqrt(out_jets[i].modp2()) );
@@ -1007,7 +1012,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       PseudoJet pruned_jet = mypruner(out_jets[i]); 
       jmass_pr.push_back(pruned_jet.m());
 
-      jmultiplicity.push_back( (float) out_jets.at(i).constituents().size() );
+      jmultiplicity.push_back( out_jets.at(i).constituents().size() );
       jisleptag.push_back( isleptag );
       
       
