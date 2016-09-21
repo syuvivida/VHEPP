@@ -162,10 +162,10 @@ for f in files:
 
                 totale = totalee + totalhe
 
-                print "totale = ", totalee, totalhe, totalhe+totalee
+#                print "totale = ", totalee, totalhe, totalhe+totalee
 
 #		if nEvent > 10: break;
-reader.close() # close the file
+        reader.close() # close the file
 
 
 

@@ -136,7 +136,7 @@ for f in files:
 
 
 #		if nEvent > 10: break;
-reader.close() # close the file
+    reader.close() # close the file
 
 
 
