@@ -26,19 +26,22 @@ float FWHM(TH1F* hist)
   //  return fwhm;
 }
 
-void jetResponse(string inputDir, float radius=0.4){
+void jetResponse(string inputDir, float radius=0.4, int mode=0){
 
+  std::string treeName = mode==0 ? "tcalo":"trawhits2";
+  std::string title = mode==0? Form("Anti-kt jet #Delta R = %.1f",radius):
+    Form("Simple jet #Delta R = %.1f",radius);
   const float xmin=0.6;
   const float xmax=1.1;
   TH1F* h_jeratio = new TH1F("h_jeratio", "", 50,xmin,xmax);
   h_jeratio->SetXTitle("E_{jet}/E_{true}");
   
-  const int nbins=4;
+  const int nbins=5;
   TH1F* h_jeratiobin[nbins];
   for(int i=0; i<nbins; i++)
     h_jeratiobin[i] = (TH1F*)h_jeratio->Clone(Form("h_jeratiobin%d",i));
   
-  const float xlows[nbins+1]={0,1000,5500,12000,42000};
+  const float xlows[nbins+1]={0,600,2600,5500,12000,42000};
 
   float sumEntries[nbins]={0,0,0};
   float numEntries[nbins]={0,0,0};
@@ -49,10 +52,10 @@ void jetResponse(string inputDir, float radius=0.4){
   for(int i=0; i<nbins; i++){
     h_jebin[i] = (TH1F*)h_je->Clone(Form("h_jebin%d",i));
   }
-  string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_response.root";
+  string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_rawhit.root";
   cout << "opening " << inputFile.data() << endl;
   TreeReader genTree(inputFile.data(),"tGEN_nonu");
-  TreeReader caloTree(inputFile.data(),"tcalo");
+  TreeReader caloTree(inputFile.data(),treeName.data());
 
 
   vector<float> jeratio_vec[nbins];
@@ -109,11 +112,13 @@ void jetResponse(string inputDir, float radius=0.4){
       h_jebin[bin]->Fill(gen_je[findGenMatch]);
       h_jeratiobin[bin]->Fill(ratio);
 
-      sumEntries[bin] += gen_je[findGenMatch];
-      numEntries[bin] += 1;
-
       if(ratio>=xmin && ratio<=xmax)
- 	jeratio_vec[bin].push_back(ratio);
+	{
+	  jeratio_vec[bin].push_back(ratio);
+	  sumEntries[bin] += gen_je[findGenMatch];
+	  numEntries[bin] += 1;
+	}
+
     } // end of loop over calo jets
   } // end loop of entries
      
@@ -138,7 +143,7 @@ void jetResponse(string inputDir, float radius=0.4){
   cout << "RMS = " << h_jeratio->GetRMS() << endl;
   cout << "FWHM= " << FWHM(h_jeratio) << endl;
 
-  TFile* outFile = new TFile(Form("radius%.1f_jetresponse.root",radius),"recreate");
+  TFile* outFile = new TFile(Form("rfull009_radius%.1f_jetresponse_%s.root",radius,treeName.data()),"recreate");
   h_jeratio->Write();
   float x[nbins];
   float y1[nbins], y1err[nbins];
@@ -266,7 +271,7 @@ void jetResponse(string inputDir, float radius=0.4){
 
   TGraphErrors* gr_RMS90 = new TGraphErrors(nbins,x,yrms90,xerr,yrms90err);
   gr_RMS90->SetName("gr_RMS90");
-  gr_RMS90->SetTitle("");
+  gr_RMS90->SetTitle(title.data());
   gr_RMS90->GetXaxis()->SetTitle("E_{true} [GeV]");
   gr_RMS90->GetYaxis()->SetTitle("RMS^{90} of E_{jet}/E_{true}");
   gr_RMS90->Draw("ACP");
@@ -282,7 +287,7 @@ void jetResponse(string inputDir, float radius=0.4){
 
   TGraphErrors* gr_Mean90 = new TGraphErrors(nbins,x,ymean90,xerr,ymean90err);
   gr_Mean90->SetName("gr_Mean90");
-  gr_Mean90->SetTitle("");
+  gr_Mean90->SetTitle(title.data());
   gr_Mean90->GetXaxis()->SetTitle("E_{true} [GeV]");
   gr_Mean90->GetYaxis()->SetTitle("Mean^{90} of E_{jet}/E_{true}");
   gr_Mean90->Draw("ACP");

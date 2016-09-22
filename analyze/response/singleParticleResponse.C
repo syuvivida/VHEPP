@@ -26,14 +26,14 @@ float FWHM(TH1F* hist)
   //  return fwhm;
 }
 
-void singleParticleResponse(string inputDir, float radius=0.4){
+void singleParticleResponse(string inputDir, float emin, float emax, float radius=0.4){
 
   const float xmin=0.6;
   const float xmax=1.1;
   TH1F* h_jeratio = new TH1F("h_jeratio", "", 50,xmin,xmax);
   h_jeratio->SetXTitle("E_{jet}/E_{true}");  
   
-  string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_of_PanPFA.root";
+  string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_rawhit.root";
   cout << "opening " << inputFile.data() << endl;
   TreeReader genTree(inputFile.data(),"tGEN_nonu");
   TreeReader caloTree(inputFile.data(),"tcalo");
@@ -59,7 +59,7 @@ void singleParticleResponse(string inputDir, float radius=0.4){
     for(unsigned int i=0; i< calo_njets; i++){
 
       if(fabs(calo_jeta[i])>1.1)continue;
-
+      if( gen_je[i] < emin || gen_je[i] > emax)continue;
       int findGenMatch=-1;
       for(unsigned int k=0; k< gen_njets; k++){
 	
@@ -76,8 +76,11 @@ void singleParticleResponse(string inputDir, float radius=0.4){
 
       if(findGenMatch<0)continue;
       float ratio=calo_je[i]/gen_je[findGenMatch];
-      h_jeratio->Fill(ratio);
-      jeratio_vec.push_back(ratio);
+      if(ratio<1.1 && ratio>0.6)
+	{
+	  h_jeratio->Fill(ratio);
+	  jeratio_vec.push_back(ratio);
+	}
     } // end of loop over calo jets
   } // end loop of tries
       
@@ -99,7 +102,9 @@ void singleParticleResponse(string inputDir, float radius=0.4){
   cout << "RMS = " << h_jeratio->GetRMS() << endl;
   cout << "FWHM= " << FWHM(h_jeratio) << endl;
 
-
+  TFile* outFile = new TFile("test.root","recreate");
+  h_jeratio->Write();
+  outFile->Close();
   // getting mean90 and rms90
   double nsamples = jeratio_vec.size();
   double sum = std::accumulate(jeratio_vec.begin(), jeratio_vec.end(), 0.0);
