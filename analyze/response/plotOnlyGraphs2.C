@@ -13,17 +13,17 @@ void plotOnlyGraphs2()
   TFile *_file0 = TFile::Open("rfull009_radius0.4_jetresponse_tcalo.root");
   gr[0] = (TGraphErrors*)(_file0->FindObjectAny("gr_Mean90"));
   gr[0]->SetName("gr0");
-  gr[1] = (TGraphErrors*)(_file0->FindObjectAny("gr_RMS90"));
+  gr[1] = (TGraphErrors*)(_file0->FindObjectAny("gr_RMSMean90"));
   gr[0]->SetName("gr1");
   TFile *_file1 = TFile::Open("rfull009_radius0.8_jetresponse_tcalo.root");
   gr[2] = (TGraphErrors*)(_file1->FindObjectAny("gr_Mean90"));
   gr[2]->SetName("gr2");
-  gr[3] = (TGraphErrors*)(_file1->FindObjectAny("gr_RMS90"));
+  gr[3] = (TGraphErrors*)(_file1->FindObjectAny("gr_RMSMean90"));
   gr[3]->SetName("gr3");
   TFile *_file2 = TFile::Open("rfull009_radius1.5_jetresponse_tcalo.root");
   gr[4] = (TGraphErrors*)(_file1->FindObjectAny("gr_Mean90"));
   gr[4]->SetName("gr4");
-  gr[5] = (TGraphErrors*)(_file1->FindObjectAny("gr_RMS90"));
+  gr[5] = (TGraphErrors*)(_file1->FindObjectAny("gr_RMSMean90"));
   gr[5]->SetName("gr5");
 
 
@@ -80,7 +80,7 @@ void plotOnlyGraphs2()
   mg2->Draw("AP");
   mg2->GetXaxis()->SetTitle("E_{true} [GeV]");
   mg2->GetYaxis()->SetTitleOffset(1.0);
-  mg2->GetYaxis()->SetTitle("RMS^{90} of E_{jet}/E_{true}");
+  mg2->GetYaxis()->SetTitle("RMS^{90}/Mean^{90} of E_{jet}/E_{true}");
 
 
   leg->Clear();
@@ -95,8 +95,8 @@ void plotOnlyGraphs2()
   leg->Draw("same");
 
 
-  c1->Print("rfull009_allradius_RMS90.pdf");
-  c1->Print("rfull009_alllradius_RMS90.gif");
+  c1->Print("rfull009_allradius_RMSMean90.pdf");
+  c1->Print("rfull009_alllradius_RMSMean90.gif");
 
 
 }

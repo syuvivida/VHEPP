@@ -42,7 +42,8 @@ void plotAllGraphs()
 
   gStyle->SetOptFit(11111);
 
-  TF1* f1 = new TF1("f1","[0]/sqrt(x)+[1]");
+  //  TF1* f1 = new TF1("f1","[0]/sqrt(x)+[1]");
+  TF1* f1 = new TF1("f1","sqrt(pow([0]/sqrt(x),2)+pow([1],2))");
   f1->SetNpx(2500);
   h_RMS->Fit("f1");
   c1->Print("RMSFit.pdf");
@@ -72,6 +73,5 @@ void plotAllGraphs()
   c1->Print("Mean90Fit.gif");
   c1->Clear();
 
-  
 
 }
