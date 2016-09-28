@@ -307,7 +307,7 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   gr_RMSMean90->SetName("gr_RMSMean90");
   gr_RMSMean90->SetTitle(title.data());
   gr_RMSMean90->GetXaxis()->SetTitle("E_{true} [GeV]");
-  gr_RMSMean90->GetYaxis()->SetTitle("RMS^{90} of E_{jet}/E_{true}");
+  gr_RMSMean90->GetYaxis()->SetTitle("RMS^{90}/Mean^{90} of E_{jet}/E_{true}");
   gr_RMSMean90->Draw("ACP");
   gr_RMSMean90->SetMarkerStyle(8);
   gr_RMSMean90->SetMarkerSize(1);
