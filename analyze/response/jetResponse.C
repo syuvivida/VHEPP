@@ -155,6 +155,7 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   float xerr[nbins];
   float yrms90[nbins],yrms90err[nbins];
   float ymean90[nbins],ymean90err[nbins];
+  float yrmsmean90[nbins],yrmsmean90err[nbins];
 
   TH1F* h_Mean = (TH1F*)h_je->Clone("h_Mean");
   h_Mean->Reset();
@@ -228,6 +229,8 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
     h_RMS90->SetBinContent(i+1,RMS90);
     h_RMS90->SetBinError(i+1, RMS90/sqrt(2*nsamples));
 
+    yrmsmean90[i]    = RMS90/mean90;
+    yrmsmean90err[i] = yrmsmean90[i]*sqrt(pow(yrms90err[i]/yrms90[i],2)+pow(ymean90err[i]/ymean90[i],2));
   }
 
   h_Mean->SetMarkerStyle(8);
@@ -298,6 +301,22 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   gr_Mean90->GetXaxis()->SetNdivisions(5);
   gr_Mean90->GetYaxis()->SetTitleOffset(1.2);
   gr_Mean90->GetYaxis()->SetDecimals();
+
+
+  TGraphErrors* gr_RMSMean90 = new TGraphErrors(nbins,x,yrmsmean90,xerr,yrmsmean90err);
+  gr_RMSMean90->SetName("gr_RMSMean90");
+  gr_RMSMean90->SetTitle(title.data());
+  gr_RMSMean90->GetXaxis()->SetTitle("E_{true} [GeV]");
+  gr_RMSMean90->GetYaxis()->SetTitle("RMS^{90} of E_{jet}/E_{true}");
+  gr_RMSMean90->Draw("ACP");
+  gr_RMSMean90->SetMarkerStyle(8);
+  gr_RMSMean90->SetMarkerSize(1);
+  gr_RMSMean90->GetXaxis()->SetTitleSize(0.05);
+  gr_RMSMean90->GetYaxis()->SetTitleSize(0.05);
+  gr_RMSMean90->GetXaxis()->SetNdivisions(5);
+  gr_RMSMean90->GetYaxis()->SetTitleOffset(1.2);
+  gr_RMSMean90->GetYaxis()->SetDecimals();
+
 
   TGraphErrors* gr_RMS = new TGraphErrors(nbins,x,y1,xerr,y1err);
   gr_RMS->SetName("gr_RMS");
@@ -394,6 +413,7 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
 
   gr_RMS90->Write();
   gr_Mean90->Write();
+  gr_RMSMean90->Write();
 
   gr_RMS->Write();
   gr_FWHM->Write();
