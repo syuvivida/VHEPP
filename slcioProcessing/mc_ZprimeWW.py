@@ -10,6 +10,7 @@ import math
 import os
 import sys
 import gc
+from java.lang import System;
 
 for arg in sys.argv: 
     print arg
@@ -53,6 +54,7 @@ fileOutHCaloR          = open(directory+'/of_HCaloHits_r.dat','w');
 nEvent=0
 for f in files:
     print "Open file=",f
+    reader = factory.createLCReader()
     reader.open(f) 
     while(1):
         evt=reader.readNextEvent()
@@ -132,16 +134,17 @@ for f in files:
 
 #		if nEvent > 10: break;
 #        if (nEvent%10==0):
-        del evt
         del col
         del colPF
         del colCl
         del colTr
         del colECB
         del colHCB
-        gc.collect()
+        del evt
 
     reader.close() # close the file
+    del reader
+    System.gc()
 
 
 

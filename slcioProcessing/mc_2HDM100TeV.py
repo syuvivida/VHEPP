@@ -15,11 +15,13 @@ from hephysics.particle import LParticle
 import math
 import os
 import sys
+import gc
+from java.lang import System;
 
 
 for arg in sys.argv: 
     print arg
-
+    
 filename = sys.argv[1]
 outputtemp=filename
 directory=outputtemp.rsplit('/', 1)[1]
@@ -48,6 +50,7 @@ fileOutHCaloR          = open(directory+'/of_HCaloHits_r.dat','w');
 nEvent=0
 for f in files:
     print "Open file=",f
+    reader = factory.createLCReader()
     reader.open(f) 
     while(1):
         evt=reader.readNextEvent()
@@ -136,7 +139,18 @@ for f in files:
 
 
 #		if nEvent > 10: break;
+        del col
+        del colPF
+        del colCl
+        del colTr
+        del colECB
+        del colHCB
+        del evt
+
     reader.close() # close the file
+    del reader
+    System.gc()
+
 
 
 
