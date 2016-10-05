@@ -175,6 +175,8 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
     h_jeratiobin[i]  ->Write();
     h_jebin[i]->Write();
 
+    if(h_jeratiobin[i]->GetEntries()<1)continue;
+
     xcenter[i] = numEntries[i]>0? sumEntries[i]/numEntries[i]: h_je->GetBinCenter(i+1);
     cout << "xcenter of bin " << i << " = " << xcenter[i] << endl;
     x[i]  = xcenter[i];
@@ -231,6 +233,8 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
 
     yrmsmean90[i]    = RMS90/mean90;
     yrmsmean90err[i] = yrmsmean90[i]*sqrt(pow(yrms90err[i]/yrms90[i],2)+pow(ymean90err[i]/ymean90[i],2));
+
+    cout << "bin " << i << ": RMSMean90 = " << yrmsmean90[i]  << "+-" << yrmsmean90err[i] << endl;
   }
 
   h_Mean->SetMarkerStyle(8);
