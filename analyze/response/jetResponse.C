@@ -41,7 +41,7 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   for(int i=0; i<nbins; i++)
     h_jeratiobin[i] = (TH1F*)h_jeratio->Clone(Form("h_jeratiobin%d",i));
   
-  const float xlows[nbins+1]={0,600,2600,5500,12000,42000};
+  const float xlows[nbins+1]={0,600,2600,5500,12000,22000};
 
   float sumEntries[nbins]={0,0,0};
   float numEntries[nbins]={0,0,0};
@@ -175,28 +175,32 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
     h_jeratiobin[i]  ->Write();
     h_jebin[i]->Write();
 
-    if(h_jeratiobin[i]->GetEntries()<1)continue;
+    cout << "entries of bin " << i << "= " << h_jeratiobin[i]->GetEntries() << endl;
 
     xcenter[i] = numEntries[i]>0? sumEntries[i]/numEntries[i]: h_je->GetBinCenter(i+1);
     cout << "xcenter of bin " << i << " = " << xcenter[i] << endl;
     x[i]  = xcenter[i];
     xerr[i] = TMath::Min(fabs(h_je->GetBinLowEdge(i+1)-xcenter[i]),
 			 fabs(h_je->GetBinLowEdge(i+2)-xcenter[i]));
+    
+    bool emptyBin=false;
+    if(h_jeratiobin[i]->GetEntries()<50)emptyBin=true;
 
-    y1[i] = h_jeratiobin[i]->GetRMS();
-    y1err[i] = h_jeratiobin[i]->GetRMSError();
+
+    y1[i] = emptyBin? -1: h_jeratiobin[i]->GetRMS();
+    y1err[i] = emptyBin? 0.001: h_jeratiobin[i]->GetRMSError();
 
     h_RMS->SetBinContent(i+1,y1[i]);
     h_RMS->SetBinError(i+1,y1err[i]);
 
-    y2[i] = FWHM(h_jeratiobin[i]);
+    y2[i] = emptyBin? -1: FWHM(h_jeratiobin[i]);
 
-    y3[i] = h_jeratiobin[i]->GetMean();
-    y3err[i] = h_jeratiobin[i]->GetMeanError();
+    y3[i] = emptyBin? -1: h_jeratiobin[i]->GetMean();
+    y3err[i] = emptyBin? 0.001: h_jeratiobin[i]->GetMeanError();
     h_Mean->SetBinContent(i+1,y3[i]);
     h_Mean->SetBinError(i+1,y3err[i]);
 
-    y4[i] = h_jeratiobin[i]->GetBinCenter(h_jeratiobin[i]->GetMaximumBin());
+    y4[i] = emptyBin? -1: h_jeratiobin[i]->GetBinCenter(h_jeratiobin[i]->GetMaximumBin());
 
     cout << "RMS = " << y1[i] << " +- " << y1err[i] << endl;
     cout << "FWHM= " << y2[i] << endl;
@@ -204,35 +208,35 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
     h_jeratiobin[i]->Fit("gaus");
     TF1 *myfunc = h_jeratiobin[i]->GetFunction("gaus");
 
-    y5[i]    = myfunc->GetParameter(1);
-    y5err[i] = myfunc->GetParError(1);
+    y5[i]    = emptyBin? -1: myfunc->GetParameter(1);
+    y5err[i] = emptyBin? 0.001: myfunc->GetParError(1);
 
-    y6[i]    = myfunc->GetParameter(2);
-    y6err[i] = myfunc->GetParError(2);
+    y6[i]    = emptyBin? -1: myfunc->GetParameter(2);
+    y6err[i] = emptyBin? 0.001: myfunc->GetParError(2);
 
 
     // getting mean90 and rms90
     double nsamples = jeratio_vec[i].size();
-    double sum = std::accumulate(jeratio_vec[i].begin(), jeratio_vec[i].end(), 0.0);
-    double mean90 = sum / nsamples;
+    double sum = emptyBin? 0: std::accumulate(jeratio_vec[i].begin(), jeratio_vec[i].end(), 0.0);
+    double mean90 = emptyBin? -1: sum / nsamples;
     
-    double sq_sum = std::inner_product(jeratio_vec[i].begin(), jeratio_vec[i].end(), jeratio_vec[i].begin(), 0.0);
-    double RMS90 = std::sqrt(sq_sum / nsamples - mean90 * mean90);
+    double sq_sum = emptyBin? 0: std::inner_product(jeratio_vec[i].begin(), jeratio_vec[i].end(), jeratio_vec[i].begin(), 0.0);
+    double RMS90 = emptyBin? -1: std::sqrt(sq_sum / nsamples - mean90 * mean90);
 
     ymean90[i]    = mean90;
-    ymean90err[i] = RMS90/sqrt(nsamples);
+    ymean90err[i] = emptyBin? 0.001: RMS90/sqrt(nsamples);
 
     h_Mean90->SetBinContent(i+1,mean90);
     h_Mean90->SetBinError(i+1, RMS90/sqrt(nsamples));
 
     yrms90[i]     = RMS90;
-    yrms90err[i]  = RMS90/sqrt(2*nsamples);
+    yrms90err[i]  = emptyBin? 0.001: RMS90/sqrt(2*nsamples);
 
     h_RMS90->SetBinContent(i+1,RMS90);
     h_RMS90->SetBinError(i+1, RMS90/sqrt(2*nsamples));
 
-    yrmsmean90[i]    = RMS90/mean90;
-    yrmsmean90err[i] = yrmsmean90[i]*sqrt(pow(yrms90err[i]/yrms90[i],2)+pow(ymean90err[i]/ymean90[i],2));
+    yrmsmean90[i]    = emptyBin? -1: RMS90/mean90;
+    yrmsmean90err[i] = emptyBin? 0.001: yrmsmean90[i]*sqrt(pow(yrms90err[i]/yrms90[i],2)+pow(ymean90err[i]/ymean90[i],2));
 
     cout << "bin " << i << ": RMSMean90 = " << yrmsmean90[i]  << "+-" << yrmsmean90err[i] << endl;
   }

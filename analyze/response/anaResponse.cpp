@@ -207,15 +207,15 @@ int main (int argc, char **argv) {
     finGEN_resolution.open(fnameGEN);
 
     char fnameCalo[150];
-    sprintf( fnameCalo, "%s/%s_Calo.dat", inputFolder.c_str(), type.c_str());
+    sprintf( fnameCalo, "%s/of_CaloClusters.dat", inputFolder.c_str());
     finCalo.open(fnameCalo);
 
     char fnameTrack[150];
-    sprintf( fnameTrack, "%s/%s_Tracks.dat", inputFolder.c_str(), type.c_str());
+    sprintf( fnameTrack, "%s/of_Tracks.dat", inputFolder.c_str());
     finTrack.open(fnameTrack);
 
     char outName[192];
-    sprintf( outName, "%s/radius%.1f_response.root", inputFolder.c_str(), jetRadius);
+    sprintf( outName, "%s/radius%.1f_response_e2.root", inputFolder.c_str(), jetRadius);
     TFile *f = TFile::Open(outName,"RECREATE");
 
     heta = new TH1F("heta","",200,-2.5,2.5);
@@ -224,6 +224,7 @@ int main (int argc, char **argv) {
     heta_after1 = (TH1F*)heta->Clone("heta_after1");
     heta_after2 = (TH1F*)heta->Clone("heta_after2");
     heta_PF     = (TH1F*)heta->Clone("heta_PF");
+
 
     TTree *tPFA = new TTree("tPFA","Tree with vectors");
     tPFA->Branch("njets"          , &njets      );

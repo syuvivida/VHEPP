@@ -84,6 +84,9 @@ TH1F* heta_after2;
 TH1F* heta_PF;
 TH1F* hy;
 
+TH1F* hecalhit_energy;
+TH1F* hhcalhit_energy;
+
 int counter;
 int evtCtr;
 
@@ -215,7 +218,7 @@ int main (int argc, char **argv) {
     finGEN_response.open(fnameGEN);
 
     char fnameCalo[150];
-    sprintf( fnameCalo, "%s/%s_Calo.dat", inputFolder.c_str(), type.c_str());
+    sprintf( fnameCalo, "%s/of_CaloClusters.dat", inputFolder.c_str());
     finCalo.open(fnameCalo);
 
     sprintf( fnameCalo, "%s/of_ECaloHits_r.dat", inputFolder.c_str());
@@ -227,7 +230,7 @@ int main (int argc, char **argv) {
     finHCalHits2.open(fnameCalo);
 
     char fnameTrack[150];
-    sprintf( fnameTrack, "%s/%s_Tracks.dat", inputFolder.c_str(), type.c_str());
+    sprintf( fnameTrack, "%s/of_Tracks.dat", inputFolder.c_str());
     finTrack.open(fnameTrack);
 
     char outName[192];
@@ -243,6 +246,9 @@ int main (int argc, char **argv) {
     heta_after1 = (TH1F*)heta->Clone("heta_after1");
     heta_after2 = (TH1F*)heta->Clone("heta_after2");
     heta_PF     = (TH1F*)heta->Clone("heta_PF");
+
+    hecalhit_energy = new TH1F("hecalhit_energy","",1000,0,2000);
+    hhcalhit_energy = new TH1F("hhcalhit_energy","",1000,0,2000);
 
     TTree *tPFA = new TTree("tPFA","Tree with vectors");
     tPFA->Branch("njets"          , &njets      );
@@ -462,6 +468,9 @@ int main (int argc, char **argv) {
     heta_after2->Write();
     heta_PF->Write();
 
+    hecalhit_energy->Write();
+    hhcalhit_energy->Write();
+
     tPFA->Write();
     tcalo->Write();
     trawhits->Write();
@@ -535,10 +544,10 @@ void readEventMC( std::vector< fastjet::PseudoJet > &allParticles ){
         if (fabs(curPseudoJet.eta()) < etaMax){
             allParticles.push_back( curPseudoJet );
         }
-	TLorentzVector temp_l4;
- 	temp_l4.SetPxPyPzE(px,py,pz,e);
-	if(abs(pdgid)<=5 && abs(pdgid)>=1)
-	  heta_status3->Fill(temp_l4.Eta());
+// 	TLorentzVector temp_l4;
+//  	temp_l4.SetPxPyPzE(px,py,pz,e);
+// 	if(abs(pdgid)<=5 && abs(pdgid)>=1)
+// 	  heta_status3->Fill(temp_l4.Eta());
 
         if(finMC.eof()) break;
         ctr++;
@@ -570,9 +579,9 @@ void readEventGEN( std::vector< fastjet::PseudoJet > &allParticles ){
             allParticles.push_back( curPseudoJet );
 	}        
 	
-	TLorentzVector temp_l4;
- 	temp_l4.SetPxPyPzE(px,py,pz,e);
-	heta->Fill(temp_l4.Eta());
+// 	TLorentzVector temp_l4;
+//  	temp_l4.SetPxPyPzE(px,py,pz,e);
+// 	heta->Fill(temp_l4.Eta());
 
         if(finGEN.eof()) break;
         ctr++;
@@ -881,6 +890,10 @@ void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles ){
         if (fabs(curPseudoJet.eta()) < etaMax){
             allParticles.push_back( curPseudoJet );
         }
+
+        if (fabs(curPseudoJet.eta()) < 1.5){
+	  hecalhit_energy->Fill(cp4.E());
+        }
         
         if(finECalHits2.eof()) break;
         ctr++;
@@ -914,6 +927,10 @@ void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles ){
         curPseudoJet.set_user_index(pdgid);
         if (fabs(curPseudoJet.eta()) < etaMax){
             allParticles.push_back( curPseudoJet );
+        }
+
+        if (fabs(curPseudoJet.eta()) < 1.5){
+	  hhcalhit_energy->Fill(cp4.E());
         }
         
         if(finHCalHits2.eof()) break;
