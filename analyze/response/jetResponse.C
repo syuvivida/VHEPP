@@ -17,6 +17,20 @@
 using namespace std;
 const float removal=0.1;
 
+float myDeltaR(float eta1, float eta2, float phi1, float phi2)
+{
+  float deta = eta1-eta2;
+  float dphi = phi1-phi2;
+  if(dphi >= TMath::Pi())
+    dphi = dphi-TMath::Pi()*2;
+  if(dphi < -TMath::Pi())
+    dphi = dphi+TMath::Pi()*2;
+  float dr = sqrt(deta*deta+dphi*dphi);
+  return dr;
+}
+
+
+
 float FWHM(TH1F* hist)
 {
   int bin1 = hist->FindFirstBinAbove(hist->GetMaximum()/2);
@@ -27,6 +41,10 @@ float FWHM(TH1F* hist)
 }
 
 void jetResponse(string inputDir, float radius=0.4, int mode=0){
+
+  string decversion;
+  if(inputDir.find("rfull009")!=std::string::npos)decversion="rfull009";
+  else if(inputDir.find("rfull012")!=std::string::npos)decversion="rfull012";
 
   std::string treeName = mode==0 ? "tcalo":"trawhits2";
   std::string title = mode==0? Form("Anti-kt jet #Delta R = %.1f",radius):
@@ -89,8 +107,8 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
       for(int k=0; k< gen_njets; k++){
 	
 	
- 	float dr = sqrt(pow(gen_jeta[k]-calo_jeta[i],2)+
- 			pow(gen_jphi[k]-calo_jphi[i],2));
+ 	float dr = myDeltaR(gen_jeta[k], calo_jeta[i],
+			    gen_jphi[k], calo_jphi[i]);
 
  	if(dr<0.1)
  	  {
@@ -103,7 +121,7 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
       float ratio=calo_je[i]/gen_je[findGenMatch];
       h_jeratio->Fill(ratio);
       int bin = h_je->FindBin(gen_je[findGenMatch]);
-      cout << "e = " << gen_je[findGenMatch] << " bin = " << bin << endl;
+      //      cout << "e = " << gen_je[findGenMatch] << " bin = " << bin << endl;
 
       if(bin==0)continue;
       if(bin>nbins)bin=nbins;
@@ -143,7 +161,8 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   cout << "RMS = " << h_jeratio->GetRMS() << endl;
   cout << "FWHM= " << FWHM(h_jeratio) << endl;
 
-  TFile* outFile = new TFile(Form("rfull009_radius%.1f_jetresponse_%s.root",radius,treeName.data()),"recreate");
+  TFile* outFile = new TFile(Form("%s_radius%.1f_jetresponse_%s.root",decversion.data(),
+				  radius,treeName.data()),"recreate");
   h_jeratio->Write();
   float x[nbins];
   float y1[nbins], y1err[nbins];
