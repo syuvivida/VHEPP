@@ -52,7 +52,7 @@ void plotOnlyGraphs3()
   mg->GetYaxis()->SetTitle("Mean^{90} of E_{jet}/E_{true}");
 
 
-  TLegend* leg = new TLegend(0.696,0.295,0.946,0.536);
+  TLegend* leg = new TLegend(0.696,0.26,0.946,0.5);
   leg->SetFillColor(0);
   leg->SetFillStyle(0);
   leg->SetTextSize(0.05);
