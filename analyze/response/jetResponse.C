@@ -45,6 +45,7 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   string decversion;
   if(inputDir.find("rfull009")!=std::string::npos)decversion="rfull009";
   else if(inputDir.find("rfull012")!=std::string::npos)decversion="rfull012";
+  else if(inputDir.find("rfull010")!=std::string::npos)decversion="rfull010";
 
   std::string treeName = mode==0 ? "tcalo":"trawhits2";
   std::string title = mode==0? Form("Anti-kt jet #Delta R = %.1f",radius):
@@ -175,6 +176,7 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   float yrms90[nbins],yrms90err[nbins];
   float ymean90[nbins],ymean90err[nbins];
   float yrmsmean90[nbins],yrmsmean90err[nbins];
+  float yrmsmean[nbins],yrmsmeanerr[nbins];
 
   TH1F* h_Mean = (TH1F*)h_je->Clone("h_Mean");
   h_Mean->Reset();
@@ -258,6 +260,12 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
     yrmsmean90err[i] = emptyBin? 0.001: yrmsmean90[i]*sqrt(pow(yrms90err[i]/yrms90[i],2)+pow(ymean90err[i]/ymean90[i],2));
 
     cout << "bin " << i << ": RMSMean90 = " << yrmsmean90[i]  << "+-" << yrmsmean90err[i] << endl;
+
+    yrmsmean[i]    = emptyBin? -1: y1[i]/y3[i];
+    yrmsmeanerr[i] = emptyBin? 0.001: yrmsmean[i]*sqrt(pow(y1err[i]/y1[i],2)+pow(y3err[i]/y3[i],2));
+
+
+
   }
 
   h_Mean->SetMarkerStyle(8);
@@ -343,6 +351,21 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   gr_RMSMean90->GetXaxis()->SetNdivisions(5);
   gr_RMSMean90->GetYaxis()->SetTitleOffset(1.2);
   gr_RMSMean90->GetYaxis()->SetDecimals();
+
+
+  TGraphErrors* gr_RMSMean = new TGraphErrors(nbins,x,yrmsmean,xerr,yrmsmeanerr);
+  gr_RMSMean->SetName("gr_RMSMean");
+  gr_RMSMean->SetTitle(title.data());
+  gr_RMSMean->GetXaxis()->SetTitle("E_{true} [GeV]");
+  gr_RMSMean->GetYaxis()->SetTitle("RMS/Mean of E_{jet}/E_{true}");
+  gr_RMSMean->Draw("ACP");
+  gr_RMSMean->SetMarkerStyle(8);
+  gr_RMSMean->SetMarkerSize(1);
+  gr_RMSMean->GetXaxis()->SetTitleSize(0.05);
+  gr_RMSMean->GetYaxis()->SetTitleSize(0.05);
+  gr_RMSMean->GetXaxis()->SetNdivisions(5);
+  gr_RMSMean->GetYaxis()->SetTitleOffset(1.2);
+  gr_RMSMean->GetYaxis()->SetDecimals();
 
 
   TGraphErrors* gr_RMS = new TGraphErrors(nbins,x,y1,xerr,y1err);
@@ -441,6 +464,7 @@ void jetResponse(string inputDir, float radius=0.4, int mode=0){
   gr_RMS90->Write();
   gr_Mean90->Write();
   gr_RMSMean90->Write();
+  gr_RMSMean->Write();
 
   gr_RMS->Write();
   gr_FWHM->Write();
