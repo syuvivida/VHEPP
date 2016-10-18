@@ -86,6 +86,8 @@ TH1F* hy;
 
 TH1F* hecalhit_energy;
 TH1F* hhcalhit_energy;
+TH1F* hecalhit_energy_log;
+TH1F* hhcalhit_energy_log;
 
 int counter;
 int evtCtr;
@@ -247,8 +249,15 @@ int main (int argc, char **argv) {
     heta_after2 = (TH1F*)heta->Clone("heta_after2");
     heta_PF     = (TH1F*)heta->Clone("heta_PF");
 
+//     hecalhit_energy = new TH1F("hecalhit_energy","",2000,0,200);
+//     hhcalhit_energy = new TH1F("hhcalhit_energy","",2000,0,200);
+//     hecalhit_energy_log = new TH1F("hecalhit_energy_log","",700,-5,2);
+//     hhcalhit_energy_log = new TH1F("hhcalhit_energy_log","",700,-5,2);
+
     hecalhit_energy = new TH1F("hecalhit_energy","",1000,0,2000);
     hhcalhit_energy = new TH1F("hhcalhit_energy","",1000,0,2000);
+    hecalhit_energy_log = new TH1F("hecalhit_energy_log","",900,-5,4);
+    hhcalhit_energy_log = new TH1F("hhcalhit_energy_log","",900,-5,4);
 
     TTree *tPFA = new TTree("tPFA","Tree with vectors");
     tPFA->Branch("njets"          , &njets      );
@@ -470,6 +479,8 @@ int main (int argc, char **argv) {
 
     hecalhit_energy->Write();
     hhcalhit_energy->Write();
+    hecalhit_energy_log->Write();
+    hhcalhit_energy_log->Write();
 
     tPFA->Write();
     tcalo->Write();
@@ -893,6 +904,7 @@ void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles ){
 
         if (fabs(curPseudoJet.eta()) < 1.5){
 	  hecalhit_energy->Fill(cp4.E());
+	  hecalhit_energy_log->Fill(TMath::Log10(cp4.E()));
         }
         
         if(finECalHits2.eof()) break;
@@ -931,6 +943,7 @@ void readEventRawHits2( std::vector< fastjet::PseudoJet > &allParticles ){
 
         if (fabs(curPseudoJet.eta()) < 1.5){
 	  hhcalhit_energy->Fill(cp4.E());
+	  hhcalhit_energy_log->Fill(TMath::Log10(cp4.E()));
         }
         
         if(finHCalHits2.eof()) break;
