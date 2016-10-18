@@ -52,7 +52,7 @@ void plotOnlyGraphs4()
   mg->Add(gr[2]);
   mg->Add(gr[4]);
   mg->Draw("AP");
-  mg->GetYaxis()->SetRangeUser(0.7,1.0);   
+  mg->GetYaxis()->SetRangeUser(0.7,1.1);   
   mg->GetXaxis()->SetTitle("E_{true} [GeV]");
   mg->GetYaxis()->SetTitleOffset(1.0);
   mg->GetYaxis()->SetTitle("Mean^{90} of E_{jet}/E_{true}");
