@@ -1043,34 +1043,43 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 ////////////////////////////////////////////////////////////////////////////////////////
 void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles){
 
-    fastjet::PseudoJet wplus;
-    fastjet::PseudoJet wminus;
-    fastjet::PseudoJet Zprime;
-    for (unsigned int i = 0; i < MCparticles.size(); i++){
-        double pdgid =  MCparticles[i].user_index();
-            if (pdgid == 24){         
-                wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-            }
-            if (pdgid == -24){
-                wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-            }
-            if (pdgid == 32){
-                Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-            }
-            if (pdgid == 25 && wplus.e()<1e-6){         
- 	     wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-            }
-	    else if(pdgid == 25 && wminus.e()<1e-6){         
-	      wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-            }
-
-            if (pdgid == 35){
-	      Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
-            }
+  fastjet::PseudoJet wplus;
+  fastjet::PseudoJet wminus;
+  fastjet::PseudoJet Zprime;
+  for (unsigned int i = 0; i < MCparticles.size(); i++){
+    double pdgid =  MCparticles[i].user_index();
+    // for Z'->WW
+    if (pdgid == 24){         
+      wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
     }
-    // fastjet::PseudoJet zprime = wplus + wminus;
-    // std::cout << wplus.px() << ", " << wminus.px() << std::endl;
-    gen_mZp = Zprime.m();
-    gen_mWW = (wplus+wminus).m();
+    if (pdgid == -24){
+      wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+    }
+    if (pdgid == 32){
+      Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+    }
+    // for H2->hh
+    if (pdgid == 25 && wplus.e()<1e-6){         
+      wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+    }
+    else if(pdgid == 25 && wminus.e()<1e-6){         
+      wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+    }
+    // for Z'->qq
+    if (abs(pdgid)<=5 && pdgid>0 && wplus.e()<1e-6){         
+      wplus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+    }
+    else if(abs(pdgid)<=5 && pdgid<0 && wminus.e()<1e-6){         
+      wminus.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+    }
+    
+    if (pdgid == 35){
+      Zprime.reset( MCparticles[i].px(), MCparticles[i].py(), MCparticles[i].pz(), MCparticles[i].e() );
+    }
+  }
+  // fastjet::PseudoJet zprime = wplus + wminus;
+  //  std::cout << wplus.px() << ", " << wminus.px() << std::endl;
+  gen_mZp = Zprime.m();
+  gen_mWW = (wplus+wminus).m();
 }
 
