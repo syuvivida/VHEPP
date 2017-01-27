@@ -91,7 +91,7 @@ void plotOOCGenJet(){
   leg->SetTextSize(0.05);
   leg->SetBorderSize(0);
   for(int iR=0; iR< nRs; iR++)
-    leg->AddEntry(Form("gr%d",iR), Form("%.1f",radius[iR]),"p");
+    leg->AddEntry(Form("gr%d",iR), Form("#Delta R = %.1f",radius[iR]),"p");
   leg->Draw("same");
 
   c1->Print("OOC_rfull009_radius_0p4_1p5.pdf");
