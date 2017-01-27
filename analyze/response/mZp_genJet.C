@@ -79,54 +79,98 @@ void mZp_genJet(string inputDir, float radius=0.4, int mode=0){
       xmax=40500;
     }
 
-  TString output=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; echo \"genjet_${test}.root\"",inputDir.data()));
+  TString output=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; echo \"genjet_radius%.1f_${test}.root\"",inputDir.data(),radius));
   cout << "writing " << output.Data() << endl;
 
-  TString output2=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; echo \"genjet_${test}\"",inputDir.data()));
+  TString output2=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; echo \"genjet_radius%.1f_${test}\"",inputDir.data(),radius));
   cout << "writing " << output2.Data() << endl;
 
   TH1F* hmjj = new TH1F("hmjj","",100,xmin,xmax);
   hmjj->SetXTitle("Generator-level M_{jj} [GeV]");
   hmjj->SetTitle(Form("%s-TeV Z'#rightarrow q#bar{q}",energy.Data()));
 
-  TreeReader genTree(inputFile.data(),"tGEN_nonu");
 
+  TH1F* hooc = new TH1F("hooc","",120,-0.2,1.0);
+  hooc->SetXTitle("Fraction of out-of-cone energy");
+  hooc->SetTitle(Form("%s-TeV Z'#rightarrow q#bar{q}",energy.Data()));
+
+  //  TreeReader genTree(inputFile.data(),"tGEN_nonu");
+  TreeReader genTree(inputFile.data(),"tGEN");
+  TreeReader mcTree(inputFile.data(),"tMC");
 
   for(Long64_t jEntry=0; jEntry< genTree.GetEntriesFast() ;jEntry++){
 
     genTree.GetEntry(jEntry);
+    mcTree.GetEntry(jEntry);
 
-
-    Float_t*  gen_je = genTree.GetPtrFloat("je");
+    Float_t*  gen_je   = genTree.GetPtrFloat("je");
     Float_t*  gen_jeta = genTree.GetPtrFloat("jeta");
     Float_t*  gen_jphi = genTree.GetPtrFloat("jphi");
-    Float_t*  gen_jpt = genTree.GetPtrFloat("jpt");
-    Float_t*  gen_jm = genTree.GetPtrFloat("jmass");
-    vector<bool> &gen_jislep = *((vector<bool>*) genTree.GetPtr("jisleptag"));
+    Float_t*  gen_jpt  = genTree.GetPtrFloat("jpt");
+    Float_t*  gen_jm   = genTree.GetPtrFloat("jmass");
 
     Int_t     gen_njets = genTree.GetInt("njets");
 
+    Float_t*  mc_je    = mcTree.GetPtrFloat("be");
+    Float_t*  mc_jeta  = mcTree.GetPtrFloat("beta");
+    Float_t*  mc_jphi  = mcTree.GetPtrFloat("bphi");
+    Float_t*  mc_jpt   = mcTree.GetPtrFloat("bpt");
+    Float_t*  mc_jm    = mcTree.GetPtrFloat("bmass");
+
+
     if(gen_njets<2)continue;
 
+    TLorentzVector l4_j[2];
     TLorentzVector l4_q[2];
-
+    int nGoodJets=0;
     for(int i=0; i<2; i++){
-    
-      l4_q[i].SetPtEtaPhiM(gen_jpt[i],
-			gen_jeta[i],
-			gen_jphi[i],
-			gen_jm[i]);
+
+       int findGenMatch=-1;
+       for(int k=0; k< 2; k++){
+	
+	
+  	float dr = myDeltaR(gen_jeta[k], mc_jeta[i],
+ 			    gen_jphi[k], mc_jphi[i]);
+
+  	if(dr<TMath::Pi())
+  	  {
+  	    findGenMatch=k;
+  	    break;
+  	  }
+       }
+
+       if(findGenMatch<0)continue;
+
+      nGoodJets++;
+      cout << i << "\t" << findGenMatch << endl;
+      l4_j[i].SetPtEtaPhiM(gen_jpt[i],
+			   gen_jeta[i],
+			   gen_jphi[i],
+			   gen_jm[i]);
+
+
+      l4_q[i].SetPtEtaPhiM(mc_jpt[findGenMatch],
+ 			   mc_jeta[findGenMatch],
+ 			   mc_jphi[findGenMatch],
+ 			   mc_jm[findGenMatch]);
+
 
     }
     
-    float mjj = (l4_q[0]+l4_q[1]).M();
+    if(nGoodJets<2)continue;
+
+    float mjj = (l4_j[0]+l4_j[1]).M();
     hmjj->Fill(mjj);
+
+    for(int i=0; i<2; i++)
+      hooc->Fill((l4_q[i].E()-l4_j[i].E())/l4_q[i].E());
 
   } // end loop of entries
      
  
   TFile* outFile = new TFile(output.Data(),"recreate");
   hmjj->Write();
+  hooc->Write();
   outFile->Close();
   
   TCanvas* c1 = new TCanvas("c1","",500,500);

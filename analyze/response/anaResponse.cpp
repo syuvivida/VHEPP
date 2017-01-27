@@ -85,6 +85,14 @@ int evtCtr;
 int njets;
 double gen_mZp;
 double gen_mWW;
+
+std::vector<float> be;
+std::vector<float> bp;
+std::vector<float> bpt;
+std::vector<float> beta;
+std::vector<float> bphi;
+std::vector<float> bmass;
+
 std::vector<float> je;
 std::vector<float> jpt;
 std::vector<float> jp;
@@ -129,6 +137,15 @@ void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles);
 void clearVectors(){
     //  INIT
   njets = 0;
+
+
+  be.clear();
+  bpt.clear();
+  bp.clear();    
+  beta.clear();
+  bphi.clear();        
+  bmass.clear();
+
   je.clear();
   jpt.clear();
   jp.clear();    
@@ -343,6 +360,12 @@ int main (int argc, char **argv) {
     TTree *tMC = new TTree("tMC","Tree with vectors");
     tMC->Branch("gen_mZp"          , &gen_mZp      );
     tMC->Branch("gen_mWW"          , &gen_mWW      );
+    tMC->Branch("be"               , &be        );
+    tMC->Branch("bpt"              , &bpt        );
+    tMC->Branch("bp"               , &bp        );    
+    tMC->Branch("beta"             , &beta       );
+    tMC->Branch("bphi"             , &bphi       );
+    tMC->Branch("bmass"            , &bmass      );    
 
     int ctr = 0;
     counter =0;
@@ -1081,5 +1104,22 @@ void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles){
   //  std::cout << wplus.px() << ", " << wminus.px() << std::endl;
   gen_mZp = Zprime.m();
   gen_mWW = (wplus+wminus).m();
+
+
+  be.push_back( wplus.E() );
+  bpt.push_back( wplus.pt() );
+  bp.push_back( sqrt(wplus.modp2()) );
+  beta.push_back( wplus.eta() );
+  bphi.push_back( wplus.phi() );
+  bmass.push_back( wplus.m() );  
+
+  be.push_back( wminus.E() );
+  bpt.push_back( wminus.pt() );
+  bp.push_back( sqrt(wminus.modp2()) );
+  beta.push_back( wminus.eta() );
+  bphi.push_back( wminus.phi() );
+  bmass.push_back( wminus.m() );  
+
+
 }
 
