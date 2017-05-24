@@ -29,8 +29,9 @@
 #include "fastjet/contrib/Njettiness.hh"
 #include "fastjet/contrib/NjettinessPlugin.hh"
 #include "fastjet/contrib/EnergyCorrelator.hh"
-// #include "fastjet/contrib/ModifiedMassDropTagger.hh"
+#include "fastjet/contrib/ModifiedMassDropTagger.hh"
 #include "fastjet/contrib/SoftDrop.hh"
+#include "fastjet/contrib/DistanceMeasure.hh"
 
 //#ifdef __MAKECINT__
 //#pragma link C++ class vector<float>+;
@@ -105,6 +106,63 @@ std::vector<float> jmass_sd;
 std::vector<float> jmass_pr;
 std::vector<float> costheta1;
 
+// a bunch of jet substructure variables
+std::vector<float> j_tau1_b1;
+std::vector<float> j_tau2_b1;
+std::vector<float> j_tau3_b1;
+std::vector<float> j_tau1_b2;
+std::vector<float> j_tau2_b2;
+std::vector<float> j_tau3_b2;
+std::vector<float> j_tau21_b2;
+std::vector<float> j_tau21_b1;
+std::vector<float> j_tau32_b2;
+std::vector<float> j_tau32_b1;
+std::vector<float> j_zlogz;
+std::vector<float> j_c1_b0;
+std::vector<float> j_c1_b1;
+std::vector<float> j_c1_b2;
+std::vector<float> j_c2_b1;
+std::vector<float> j_c2_b2;
+std::vector<float> j_d2_b1;
+std::vector<float> j_d2_b2;
+std::vector<float> j_d2_a1_b1;
+std::vector<float> j_d2_a1_b2;
+std::vector<float> j_n2_b1;
+std::vector<float> j_n2_b2;
+std::vector<float> j_m2_b1;
+std::vector<float> j_m2_b2;
+
+std::vector<float> j_tau1_b1_mmdt;
+std::vector<float> j_tau2_b1_mmdt;
+std::vector<float> j_tau3_b1_mmdt;
+std::vector<float> j_tau1_b2_mmdt;
+std::vector<float> j_tau2_b2_mmdt;
+std::vector<float> j_tau3_b2_mmdt;
+std::vector<float> j_tau21_b2_mmdt;
+std::vector<float> j_tau21_b1_mmdt;
+std::vector<float> j_tau32_b2_mmdt;
+std::vector<float> j_tau32_b1_mmdt;
+std::vector<float> j_c1_b0_mmdt;
+std::vector<float> j_c1_b1_mmdt;
+std::vector<float> j_c1_b2_mmdt;
+std::vector<float> j_c2_b1_mmdt;
+std::vector<float> j_c2_b2_mmdt;
+std::vector<float> j_d2_b1_mmdt;
+std::vector<float> j_d2_b2_mmdt;
+std::vector<float> j_d2_a1_b1_mmdt;
+std::vector<float> j_d2_a1_b2_mmdt;
+std::vector<float> j_n2_b1_mmdt;
+std::vector<float> j_n2_b2_mmdt;
+std::vector<float> j_m2_b1_mmdt;
+std::vector<float> j_m2_b2_mmdt;
+
+std::vector<float> j_qjetVol;
+std::vector<float> j_mass_trim;
+std::vector<float> j_mass_mmdt;
+std::vector<float> j_mass_prun;
+std::vector<float> j_mass_sdb2;
+std::vector<float> j_mass_sdm1;
+
 struct genHiggs
 {
   TLorentzVector p4;
@@ -132,7 +190,7 @@ void readEventCalo( std::vector< fastjet::PseudoJet > &allParticles );
 void readEventTrack(  std::vector< fastjet::PseudoJet > &allParticles );
 
 void computeCosTheta1();
-void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles);
+void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles, bool fillJSub=false);
 void analyzeMCEvent(std::vector < fastjet::PseudoJet > MCparticles);
 void clearVectors(){
     //  INIT
@@ -157,6 +215,66 @@ void clearVectors(){
   jmultiplicity.clear();
   jisleptag.clear();
   costheta1.clear();
+
+  // a bunch of jet substructure variables
+
+  j_tau1_b1.clear();
+  j_tau2_b1.clear();
+  j_tau3_b1.clear();    
+  j_tau1_b2.clear();
+  j_tau2_b2.clear();
+  j_tau3_b2.clear();    
+  j_tau21_b1.clear();
+  j_tau21_b2.clear();
+  j_tau32_b1.clear();
+  j_tau32_b2.clear();
+  j_zlogz.clear();
+  j_c1_b0.clear();
+  j_c1_b1.clear();
+  j_c1_b2.clear();
+  j_c2_b1.clear();
+  j_c2_b2.clear();
+  j_d2_b1.clear();
+  j_d2_b2.clear();
+  j_d2_a1_b1.clear();
+  j_d2_a1_b2.clear();
+  j_m2_b1.clear();
+  j_m2_b2.clear();
+  j_n2_b1.clear();
+  j_n2_b2.clear();
+
+  j_tau1_b1_mmdt.clear();
+  j_tau2_b1_mmdt.clear();
+  j_tau3_b1_mmdt.clear();    
+  j_tau1_b2_mmdt.clear();
+  j_tau2_b2_mmdt.clear();
+  j_tau3_b2_mmdt.clear();    
+  j_tau21_b1_mmdt.clear();
+  j_tau21_b2_mmdt.clear();
+  j_tau32_b1_mmdt.clear();
+  j_tau32_b2_mmdt.clear();
+  j_c1_b0_mmdt.clear();
+  j_c1_b1_mmdt.clear();
+  j_c1_b2_mmdt.clear();
+  j_c2_b1_mmdt.clear();
+  j_c2_b2_mmdt.clear();
+  j_d2_b1_mmdt.clear();
+  j_d2_b2_mmdt.clear();
+  j_d2_a1_b1_mmdt.clear();
+  j_d2_a1_b2_mmdt.clear();
+  j_m2_b1_mmdt.clear();
+  j_m2_b2_mmdt.clear();
+  j_n2_b1_mmdt.clear();
+  j_n2_b2_mmdt.clear();
+
+  j_qjetVol.clear();
+  j_mass_trim.clear();
+  j_mass_mmdt.clear();
+  j_mass_prun.clear();
+  j_mass_sdb2.clear();
+  j_mass_sdm1.clear();
+
+
 }
 
 
@@ -257,6 +375,8 @@ int main (int argc, char **argv) {
     tPFA->Branch("jisleptag"      , &jisleptag      );    
     tPFA->Branch("costheta1"      , &costheta1      );    
 
+
+
     TTree *tcalo = new TTree("tcalo","Tree with vectors");
     tcalo->Branch("njets"          , &njets      );
     tcalo->Branch("je"             , &je         );
@@ -270,6 +390,66 @@ int main (int argc, char **argv) {
     tcalo->Branch("jmultiplicity"  , &jmultiplicity      );    
     tcalo->Branch("jisleptag"      , &jisleptag      );    
     tcalo->Branch("costheta1"      , &costheta1      );    
+
+    tcalo->Branch("j_tau1_b1"        , &j_tau1_b1        );
+    tcalo->Branch("j_tau2_b1"        , &j_tau2_b1        );
+    tcalo->Branch("j_tau3_b1"        , &j_tau3_b1        );    
+    tcalo->Branch("j_tau1_b2"        , &j_tau1_b2        );
+    tcalo->Branch("j_tau2_b2"        , &j_tau2_b2        );
+    tcalo->Branch("j_tau3_b2"        , &j_tau3_b2        );    
+    tcalo->Branch("j_tau21_b1"       , &j_tau21_b1       );
+    tcalo->Branch("j_tau21_b2"       , &j_tau21_b2       );
+    tcalo->Branch("j_tau21_b1"       , &j_tau21_b1       );
+    tcalo->Branch("j_tau21_b2"       , &j_tau21_b2       );
+    tcalo->Branch("j_tau32_b1"       , &j_tau32_b1       );
+    tcalo->Branch("j_tau32_b2"       , &j_tau32_b2       );
+    tcalo->Branch("j_zlogz"          , &j_zlogz          );
+    tcalo->Branch("j_c1_b0"          , &j_c1_b0          );
+    tcalo->Branch("j_c1_b1"          , &j_c1_b1          );
+    tcalo->Branch("j_c1_b2"          , &j_c1_b2          );
+    tcalo->Branch("j_c2_b1"          , &j_c2_b1          );
+    tcalo->Branch("j_c2_b2"          , &j_c2_b2          );
+    tcalo->Branch("j_d2_b1"          , &j_d2_b1          );
+    tcalo->Branch("j_d2_b2"          , &j_d2_b2          );
+    tcalo->Branch("j_d2_a1_b1"       , &j_d2_a1_b1       );
+    tcalo->Branch("j_d2_a1_b2"       , &j_d2_a1_b2       );
+    tcalo->Branch("j_m2_b1"          , &j_m2_b1          );
+    tcalo->Branch("j_m2_b2"          , &j_m2_b2          );
+    tcalo->Branch("j_n2_b1"          , &j_n2_b1          );
+    tcalo->Branch("j_n2_b2"          , &j_n2_b2          );
+
+    tcalo->Branch("j_tau1_b1_mmdt"        , &j_tau1_b1_mmdt        );
+    tcalo->Branch("j_tau2_b1_mmdt"        , &j_tau2_b1_mmdt        );
+    tcalo->Branch("j_tau3_b1_mmdt"        , &j_tau3_b1_mmdt        );    
+    tcalo->Branch("j_tau1_b2_mmdt"        , &j_tau1_b2_mmdt        );
+    tcalo->Branch("j_tau2_b2_mmdt"        , &j_tau2_b2_mmdt        );
+    tcalo->Branch("j_tau3_b2_mmdt"        , &j_tau3_b2_mmdt        );    
+    tcalo->Branch("j_tau21_b1_mmdt"       , &j_tau21_b1_mmdt       );
+    tcalo->Branch("j_tau21_b2_mmdt"       , &j_tau21_b2_mmdt       );
+    tcalo->Branch("j_tau21_b1_mmdt"       , &j_tau21_b1_mmdt       );
+    tcalo->Branch("j_tau21_b2_mmdt"       , &j_tau21_b2_mmdt       );
+    tcalo->Branch("j_tau32_b1_mmdt"       , &j_tau32_b1_mmdt       );
+    tcalo->Branch("j_tau32_b2_mmdt"       , &j_tau32_b2_mmdt       );
+    tcalo->Branch("j_c1_b0_mmdt"          , &j_c1_b0_mmdt          );
+    tcalo->Branch("j_c1_b1_mmdt"          , &j_c1_b1_mmdt          );
+    tcalo->Branch("j_c1_b2_mmdt"          , &j_c1_b2_mmdt          );
+    tcalo->Branch("j_c2_b1_mmdt"          , &j_c2_b1_mmdt          );
+    tcalo->Branch("j_c2_b2_mmdt"          , &j_c2_b2_mmdt          );
+    tcalo->Branch("j_d2_b1_mmdt"          , &j_d2_b1_mmdt          );
+    tcalo->Branch("j_d2_b2_mmdt"          , &j_d2_b2_mmdt          );
+    tcalo->Branch("j_d2_a1_b1_mmdt"       , &j_d2_a1_b1_mmdt       );
+    tcalo->Branch("j_d2_a1_b2_mmdt"       , &j_d2_a1_b2_mmdt       );
+    tcalo->Branch("j_m2_b1_mmdt"          , &j_m2_b1_mmdt          );
+    tcalo->Branch("j_m2_b2_mmdt"          , &j_m2_b2_mmdt          );
+    tcalo->Branch("j_n2_b1_mmdt"          , &j_n2_b1_mmdt          );
+    tcalo->Branch("j_n2_b2_mmdt"          , &j_n2_b2_mmdt          );
+
+    tcalo->Branch("j_mass_trim"      , &j_mass_trim      );
+    tcalo->Branch("j_mass_mmdt"      , &j_mass_mmdt      );
+    tcalo->Branch("j_mass_prun"      , &j_mass_prun      );
+    tcalo->Branch("j_mass_sdb2"      , &j_mass_sdb2      );
+    tcalo->Branch("j_mass_sdm1"      , &j_mass_sdm1      );
+
 
     TTree *ttrack = new TTree("ttrack","Tree with vectors");
     ttrack->Branch("njets"          , &njets      );
@@ -285,6 +465,7 @@ int main (int argc, char **argv) {
     ttrack->Branch("jisleptag"      , &jisleptag      );    
     ttrack->Branch("costheta1"      , &costheta1      );    
 
+
     TTree *tGEN = new TTree("tGEN","Tree with vectors");
     tGEN->Branch("njets"          , &njets      );
     tGEN->Branch("je"             , &je         );
@@ -298,6 +479,65 @@ int main (int argc, char **argv) {
     tGEN->Branch("jmultiplicity"  , &jmultiplicity      );    
     tGEN->Branch("jisleptag"      , &jisleptag      );        
     tGEN->Branch("costheta1"      , &costheta1      );    
+
+    tGEN->Branch("j_tau1_b1"        , &j_tau1_b1        );
+    tGEN->Branch("j_tau2_b1"        , &j_tau2_b1        );
+    tGEN->Branch("j_tau3_b1"        , &j_tau3_b1        );    
+    tGEN->Branch("j_tau1_b2"        , &j_tau1_b2        );
+    tGEN->Branch("j_tau2_b2"        , &j_tau2_b2        );
+    tGEN->Branch("j_tau3_b2"        , &j_tau3_b2        );    
+    tGEN->Branch("j_tau21_b1"       , &j_tau21_b1       );
+    tGEN->Branch("j_tau21_b2"       , &j_tau21_b2       );
+    tGEN->Branch("j_tau21_b1"       , &j_tau21_b1       );
+    tGEN->Branch("j_tau21_b2"       , &j_tau21_b2       );
+    tGEN->Branch("j_tau32_b1"       , &j_tau32_b1       );
+    tGEN->Branch("j_tau32_b2"       , &j_tau32_b2       );
+    tGEN->Branch("j_zlogz"          , &j_zlogz          );
+    tGEN->Branch("j_c1_b0"          , &j_c1_b0          );
+    tGEN->Branch("j_c1_b1"          , &j_c1_b1          );
+    tGEN->Branch("j_c1_b2"          , &j_c1_b2          );
+    tGEN->Branch("j_c2_b1"          , &j_c2_b1          );
+    tGEN->Branch("j_c2_b2"          , &j_c2_b2          );
+    tGEN->Branch("j_d2_b1"          , &j_d2_b1          );
+    tGEN->Branch("j_d2_b2"          , &j_d2_b2          );
+    tGEN->Branch("j_d2_a1_b1"       , &j_d2_a1_b1       );
+    tGEN->Branch("j_d2_a1_b2"       , &j_d2_a1_b2       );
+    tGEN->Branch("j_m2_b1"          , &j_m2_b1          );
+    tGEN->Branch("j_m2_b2"          , &j_m2_b2          );
+    tGEN->Branch("j_n2_b1"          , &j_n2_b1          );
+    tGEN->Branch("j_n2_b2"          , &j_n2_b2          );
+
+    tGEN->Branch("j_tau1_b1_mmdt"        , &j_tau1_b1_mmdt        );
+    tGEN->Branch("j_tau2_b1_mmdt"        , &j_tau2_b1_mmdt        );
+    tGEN->Branch("j_tau3_b1_mmdt"        , &j_tau3_b1_mmdt        );    
+    tGEN->Branch("j_tau1_b2_mmdt"        , &j_tau1_b2_mmdt        );
+    tGEN->Branch("j_tau2_b2_mmdt"        , &j_tau2_b2_mmdt        );
+    tGEN->Branch("j_tau3_b2_mmdt"        , &j_tau3_b2_mmdt        );    
+    tGEN->Branch("j_tau21_b1_mmdt"       , &j_tau21_b1_mmdt       );
+    tGEN->Branch("j_tau21_b2_mmdt"       , &j_tau21_b2_mmdt       );
+    tGEN->Branch("j_tau21_b1_mmdt"       , &j_tau21_b1_mmdt       );
+    tGEN->Branch("j_tau21_b2_mmdt"       , &j_tau21_b2_mmdt       );
+    tGEN->Branch("j_tau32_b1_mmdt"       , &j_tau32_b1_mmdt       );
+    tGEN->Branch("j_tau32_b2_mmdt"       , &j_tau32_b2_mmdt       );
+    tGEN->Branch("j_c1_b0_mmdt"          , &j_c1_b0_mmdt          );
+    tGEN->Branch("j_c1_b1_mmdt"          , &j_c1_b1_mmdt          );
+    tGEN->Branch("j_c1_b2_mmdt"          , &j_c1_b2_mmdt          );
+    tGEN->Branch("j_c2_b1_mmdt"          , &j_c2_b1_mmdt          );
+    tGEN->Branch("j_c2_b2_mmdt"          , &j_c2_b2_mmdt          );
+    tGEN->Branch("j_d2_b1_mmdt"          , &j_d2_b1_mmdt          );
+    tGEN->Branch("j_d2_b2_mmdt"          , &j_d2_b2_mmdt          );
+    tGEN->Branch("j_d2_a1_b1_mmdt"       , &j_d2_a1_b1_mmdt       );
+    tGEN->Branch("j_d2_a1_b2_mmdt"       , &j_d2_a1_b2_mmdt       );
+    tGEN->Branch("j_m2_b1_mmdt"          , &j_m2_b1_mmdt          );
+    tGEN->Branch("j_m2_b2_mmdt"          , &j_m2_b2_mmdt          );
+    tGEN->Branch("j_n2_b1_mmdt"          , &j_n2_b1_mmdt          );
+    tGEN->Branch("j_n2_b2_mmdt"          , &j_n2_b2_mmdt          );
+
+    tGEN->Branch("j_mass_trim"      , &j_mass_trim      );
+    tGEN->Branch("j_mass_mmdt"      , &j_mass_mmdt      );
+    tGEN->Branch("j_mass_prun"      , &j_mass_prun      );
+    tGEN->Branch("j_mass_sdb2"      , &j_mass_sdb2      );
+    tGEN->Branch("j_mass_sdm1"      , &j_mass_sdm1      );
 
 
     TTree *tGEN_charged = new TTree("tGEN_charged","Tree with vectors");
@@ -395,7 +635,7 @@ int main (int argc, char **argv) {
         if (ctr > 0){
 	  
  	    clearVectors();
- 	    analyzeEvent( allParticlesGEN, jetRadius, allParticlesMC );
+ 	    analyzeEvent( allParticlesGEN, jetRadius, allParticlesMC, true);
 	    tGEN->Fill();
 	
  	    clearVectors();
@@ -419,7 +659,7 @@ int main (int argc, char **argv) {
             tPFA->Fill();
 
             clearVectors();
-            analyzeEvent( allParticlesCalo, jetRadius, allParticlesMC );
+            analyzeEvent( allParticlesCalo, jetRadius, allParticlesMC, true);
             tcalo->Fill();    
 
             clearVectors();
@@ -927,7 +1167,7 @@ void readEventTrack( std::vector< fastjet::PseudoJet > &allParticles ){
 
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles){
+void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std::vector < fastjet::PseudoJet > MCparticles, bool fillJSub){
 
   //    std::cout << "analyzing event..." << particles.size() << std::endl;
     double rParam = rVal;
@@ -973,10 +1213,47 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 
 
 
+    // groomers/taggers
+    fastjet::Pruner pruner1( fastjet::cambridge_algorithm, 0.1, 0.5 );
+    fastjet::Filter trimmer1( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.03)) );
     double beta_sd = 1.0;
     double zcut_sd = 0.1;
-    double mu_sd   = 1.0; // for mass drop, equivalent to no cut
+    double mu_sd   = 1.0;
     fastjet::contrib::SoftDrop soft_drop_mmdt(0.0, zcut_sd, mu_sd);
+    fastjet::contrib::SoftDrop soft_drop_sdb2(2.0, zcut_sd, mu_sd);
+    fastjet::contrib::SoftDrop soft_drop_sdm1(-1.0, zcut_sd, mu_sd);   
+
+    // n-subjettiness   
+    const double RPARAM=jetRadius;
+    double beta = 1;      // power for angular dependence, e.g. beta = 1 --> linear k-means, beta = 2 --> quadratic/classic k-means
+    double R0   = RPARAM; // Characteristic jet radius for normalization              
+    double Rcut = RPARAM; // maximum R particles can be from axis to be included in jet   
+
+    // beta = 1                   
+    fastjet::contrib::Nsubjettiness nSub1KT_b1(1, fastjet::contrib::OnePass_KT_Axes(), fastjet::contrib::UnnormalizedMeasure(1));
+    fastjet::contrib::Nsubjettiness nSub2KT_b1(2, fastjet::contrib::OnePass_KT_Axes(), fastjet::contrib::UnnormalizedMeasure(1));
+    fastjet::contrib::Nsubjettiness nSub3KT_b1(3, fastjet::contrib::OnePass_KT_Axes(), fastjet::contrib::UnnormalizedMeasure(1));
+
+    // beta = 2
+    fastjet::contrib::Nsubjettiness nSub1KT_b2(1, fastjet::contrib::OnePass_KT_Axes(), fastjet::contrib::UnnormalizedMeasure(2));
+    fastjet::contrib::Nsubjettiness nSub2KT_b2(2, fastjet::contrib::OnePass_KT_Axes(), fastjet::contrib::UnnormalizedMeasure(2));
+    fastjet::contrib::Nsubjettiness nSub3KT_b2(3, fastjet::contrib::OnePass_KT_Axes(), fastjet::contrib::UnnormalizedMeasure(2));
+
+    // ECF
+    fastjet::contrib::EnergyCorrelatorDoubleRatio ECF_C1_b0(1,0,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorDoubleRatio ECF_C1_b1(1,1,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorDoubleRatio ECF_C1_b2(1,2,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorDoubleRatio ECF_C2_b1(2,1,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorDoubleRatio ECF_C2_b2(2,2,fastjet::contrib::EnergyCorrelator::pt_R);
+
+    fastjet::contrib::EnergyCorrelatorD2 ECF_D2_b1 (1.0,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorD2 ECF_D2_b2 (2.0,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorGeneralizedD2 ECF_D2_a1_b1 (1.0,1.0,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorGeneralizedD2 ECF_D2_a1_b2 (1.0,2.0,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorMseries ECF_M2_b1 (2,1.0,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorMseries ECF_M2_b2 (2,2.0,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorNseries ECF_N2_b1 (2,1.0,fastjet::contrib::EnergyCorrelator::pt_R);
+    fastjet::contrib::EnergyCorrelatorNseries ECF_N2_b2 (2,2.0,fastjet::contrib::EnergyCorrelator::pt_R);
 
 
     // take only the two leading jets for Z' and H2 decays
@@ -1039,6 +1316,7 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
       jmultiplicity.push_back( out_jets.at(i).constituents().size() );
       jisleptag.push_back( isleptag );
       
+
       
       int genHIndex=-1;
       for(unsigned int ip=0; ip<2; ip++)
@@ -1056,6 +1334,79 @@ void analyzeEvent(std::vector < fastjet::PseudoJet > particles, float rVal, std:
 	costheta1.push_back(-999);
       else
 	costheta1.push_back(h_gen[i].cosTheta1);
+
+
+      // a bunch of substructure variables
+      if(!fillJSub)continue;
+      // N-subjettiness
+      fastjet::PseudoJet curjet = out_jets[i];
+      j_tau1_b1.push_back(  nSub1KT_b1(curjet) );        
+      j_tau2_b1.push_back(  nSub2KT_b1(curjet) );        
+      j_tau3_b1.push_back(  nSub3KT_b1(curjet) );        
+      j_tau1_b2.push_back(  nSub1KT_b2(curjet) );        
+      j_tau2_b2.push_back(  nSub2KT_b2(curjet) );  
+      j_tau3_b2.push_back(  nSub3KT_b2(curjet) );  
+      j_tau21_b1.push_back( nSub2KT_b1(curjet) / nSub1KT_b1(curjet) );
+      j_tau21_b2.push_back( nSub2KT_b2(curjet) / nSub1KT_b2(curjet) );
+      j_tau32_b1.push_back( nSub3KT_b1(curjet) / nSub2KT_b1(curjet) );
+      j_tau32_b2.push_back( nSub3KT_b2(curjet) / nSub2KT_b2(curjet) );
+
+      // Z log Z
+      float zlogz = 0.;
+      for (int i = 0; i < curjet.constituents().size(); i++){
+	float conste = curjet.constituents().at(i).e()/curjet.e();
+	zlogz += conste * log(conste);
+      }
+
+      // energy correlator     
+      j_zlogz.push_back( zlogz );   
+      j_c1_b0.push_back( ECF_C1_b0(curjet) );
+      j_c1_b1.push_back( ECF_C1_b1(curjet) );
+      j_c1_b2.push_back( ECF_C1_b2(curjet) );
+      j_c2_b1.push_back( ECF_C2_b1(curjet) );
+      j_c2_b2.push_back( ECF_C2_b2(curjet) );
+      j_d2_b1.push_back( ECF_D2_b1(curjet) );
+      j_d2_b2.push_back( ECF_D2_b2(curjet) );
+      j_d2_a1_b1.push_back( ECF_D2_a1_b1(curjet) );
+      j_d2_a1_b2.push_back( ECF_D2_a1_b2(curjet) );
+      j_m2_b1.push_back( ECF_M2_b1(curjet) );
+      j_m2_b2.push_back( ECF_M2_b2(curjet) );
+      j_n2_b1.push_back( ECF_N2_b1(curjet) );
+      j_n2_b2.push_back( ECF_N2_b2(curjet) );
+
+      // Groomed variables
+      fastjet::PseudoJet mmdtjet=soft_drop_mmdt(curjet);
+
+      j_tau1_b1_mmdt.push_back(  nSub1KT_b1(mmdtjet) );        
+      j_tau2_b1_mmdt.push_back(  nSub2KT_b1(mmdtjet) );        
+      j_tau3_b1_mmdt.push_back(  nSub3KT_b1(mmdtjet) );        
+      j_tau1_b2_mmdt.push_back(  nSub1KT_b2(mmdtjet) );        
+      j_tau2_b2_mmdt.push_back(  nSub2KT_b2(mmdtjet) );  
+      j_tau3_b2_mmdt.push_back(  nSub3KT_b2(mmdtjet) );  
+      j_tau21_b1_mmdt.push_back( nSub2KT_b1(mmdtjet) / nSub1KT_b1(mmdtjet) );
+      j_tau21_b2_mmdt.push_back( nSub2KT_b2(mmdtjet) / nSub1KT_b2(mmdtjet) );
+      j_tau32_b1_mmdt.push_back( nSub3KT_b1(mmdtjet) / nSub2KT_b1(mmdtjet) );
+      j_tau32_b2_mmdt.push_back( nSub3KT_b2(mmdtjet) / nSub2KT_b2(mmdtjet) );
+      j_c1_b0_mmdt.push_back( ECF_C1_b0(mmdtjet) );
+      j_c1_b1_mmdt.push_back( ECF_C1_b1(mmdtjet) );
+      j_c1_b2_mmdt.push_back( ECF_C1_b2(mmdtjet) );
+      j_c2_b1_mmdt.push_back( ECF_C2_b1(mmdtjet) );
+      j_c2_b2_mmdt.push_back( ECF_C2_b2(mmdtjet) );
+      j_d2_b1_mmdt.push_back( ECF_D2_b1(mmdtjet) );
+      j_d2_b2_mmdt.push_back( ECF_D2_b2(mmdtjet) );
+      j_d2_a1_b1_mmdt.push_back( ECF_D2_a1_b1(mmdtjet) );
+      j_d2_a1_b2_mmdt.push_back( ECF_D2_a1_b2(mmdtjet) );
+      j_m2_b1_mmdt.push_back( ECF_M2_b1(mmdtjet) );
+      j_m2_b2_mmdt.push_back( ECF_M2_b2(mmdtjet) );
+      j_n2_b1_mmdt.push_back( ECF_N2_b1(mmdtjet) );
+      j_n2_b2_mmdt.push_back( ECF_N2_b2(mmdtjet) );
+        
+      j_mass_trim.push_back( trimmer1( curjet ).m() );
+      j_mass_prun.push_back( pruner1( curjet ).m() );    
+      j_mass_mmdt.push_back( mmdtjet.m() );
+      j_mass_sdb2.push_back( soft_drop_sdb2( curjet ).m() );
+      j_mass_sdm1.push_back( soft_drop_sdm1( curjet ).m() );
+
 
     }
     njets = numGoodJets;

@@ -1,10 +1,11 @@
 # ----------------------------------------
 # inputs 
 
-FASTJETLOCATION=/Users/syu/vlhc/fastjet-install
+FASTJETLOCATION=/Users/syu/vlhc/analyze/fastjet/fastjet-install
+#FASTJETLOCATION=/Users/syu/vlhc/fastjet-install
 FASTJETINC :=`$(FASTJETLOCATION)/bin/fastjet-config --cxxflags --plugins`
 FASTJETLIB :=`$(FASTJETLOCATION)/bin/fastjet-config --libs --plugins`
-MYFASTJET  :=`$(FASTJETLOCATION)/bin/fastjet-config --cxxflags --libs --plugins`
+#MYFASTJET  :=`$(FASTJETLOCATION)/bin/fastjet-config --cxxflags --libs --plugins`
 ROOTINC := `root-config --glibs --cflags`
 
 # ----------------------------------------
@@ -14,7 +15,7 @@ ROOTINC := `root-config --glibs --cflags`
 all: anaResponse
 
 anaResponse: anaResponse.cpp $(FILES)
-	c++ -o anaResponse $(ROOTINC) $(FASTJETINC) $(FASTJETLIB) -lvectorDict -lEnergyCorrelator -lRecursiveTools anaResponse.cpp
+	c++ -o anaResponse $(ROOTINC) $(FASTJETINC) $(FASTJETLIB) -lvectorDict -lEnergyCorrelator -lNsubjettiness -lRecursiveTools anaResponse.cpp
     
 %.o: %.C %.h
 	gcc -fPIC -O3 -c $(FASTJETINC) $< -o $@ 
