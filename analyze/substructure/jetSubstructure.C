@@ -66,7 +66,7 @@ void jetSubstructure(string inputDir, float radius=0.4, int mode=0){
   const int nhistos=13;//ntemp_histos;
 
   std::cout << "Total number of histograms is " << nhistos << std::endl;
-  const float xmax[nhistos]={400,400,400,400,400,1,1,20,1,1,1,20,1};
+  const float xmax[nhistos]={400,400,400,400,400,1,0.3,20,1,1,0.3,20,1};
 
   TH1F* h_sub[nhistos];
   const float xmin=0;
