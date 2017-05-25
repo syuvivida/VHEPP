@@ -14,6 +14,39 @@
 
 using namespace std;
 
+double overlappedFraction(const TH1* h1, const TH1* h2);
+
+double overlappedFraction(const TH1* h1, const TH1* h2){
+
+  double overlap=0;
+  //sanity check                                                                                                                                                                 
+  // check if the integral is equal to unity                                                                                                                                                                                                                                                                                                       
+  if(fabs(h1->Integral()-1)>1e-6){cout << h1->GetName() << " has an integral not equal to 1" << endl; return overlap;}
+  if(fabs(h2->Integral()-1)>1e-6){cout << h2->GetName() << " has an integral not equal to 1" << endl; return overlap;}
+
+
+  // check if h1 and h2 have the same binning and boundary                                                                                                                       \
+                                                                                                                                                                                  
+  const int nbins=h1->GetNbinsX();
+  if(h1->GetNbinsX() != h2->GetNbinsX()){cout << h1->GetName() << " and " << h2->GetName() << " do not have the same number of bins " << endl; return overlap;}
+  if(fabs(h1->GetBinLowEdge(1)-h2->GetBinLowEdge(1))>1e-6){cout << h1->GetName() << " and " << h2->GetName() << " do not have the same xmin " << endl; return overlap;}
+  if(fabs(h1->GetBinLowEdge(nbins+1)-h2->GetBinLowEdge(nbins+1))>1e-6){cout << h1->GetName() << " and " << h2->GetName() << " do not have the same xmax " << endl; return overlap\
+																				     ;}
+
+  // now we can proceed                                                                                                                                                          \
+                                                                                                                                                                                  
+  for(int ib=1; ib<=nbins; ib++){
+
+    if(h1->GetBinContent(ib)<1e-12)continue;
+    if(h2->GetBinContent(ib)<1e-12)continue;
+
+    if(h1->GetBinContent(ib) < h2->GetBinContent(ib))overlap += h1->GetBinContent(ib);
+    else overlap +=h2->GetBinContent(ib);
+  }
+
+  return overlap;
+}
+
 
 void dumpCompareMultiplePDF(std::string inputText_,std::string header,bool normalize=true,bool logy=false)
 {
@@ -130,8 +163,17 @@ void dumpCompareMultiplePDF(std::string inputText_,std::string header,bool norma
       h[0]->Draw("hist");
       for(int i=0; i<nfile; i++)h[i]->Draw("histsame");
 
+
       leg->Clear();
       leg->SetHeader(header.data());
+
+      if(nfile==2)
+	{
+	  double overlap=overlappedFraction(h[0],h[1])*100;
+	  leg->AddEntry((TObject*)0, Form("overlapped %d %%",(int)overlap), "");
+	  leg->AddEntry((TObject*)0, "", "");
+	}
+
       for(int i=0; i< nfile; i++)
 	leg->AddEntry(h[i], legendName[i].data(),"l");
       leg->Draw("same");
