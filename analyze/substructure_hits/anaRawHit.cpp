@@ -1236,7 +1236,7 @@ void readEventRawHits( std::vector< fastjet::PseudoJet > &allParticles ){
     std::vector < fastjet::PseudoJet > allParticles_temp = allParticles;
     allParticles=sorted_by_pt(allParticles_temp);
     
-    const unsigned int n_temp_to_be_removed = emin*size_temp;
+    const unsigned int n_temp_to_be_removed = emin/100.*size_temp;
     allParticles.erase(allParticles.end()-n_temp_to_be_removed,allParticles.end());
 //     std::cout << "After erasing, the size of ECAL+HCAL allParticles = " << allParticles.size() << std::endl;
     
