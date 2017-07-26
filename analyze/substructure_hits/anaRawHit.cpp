@@ -368,9 +368,9 @@ int main (int argc, char **argv) {
 
     char outName[192];
     if(NJOBS==7)
-      sprintf( outName, "%s/radius%.1f_rawhit.root", inputFolder.c_str(), jetRadius);
+      sprintf( outName, "%s/radius%.1f_rawhit_mode%d.root", inputFolder.c_str(), jetRadius,mode);
     else
-      sprintf( outName, "%s/radius%.1f_rawhit_fastjet.root", inputFolder.c_str(), jetRadius);
+      sprintf( outName, "%s/radius%.1f_rawhit_fastjet_mode%d.root", inputFolder.c_str(), jetRadius,mode);
     TFile *f = TFile::Open(outName,"RECREATE");
 
     heta = new TH1F("heta","",200,-2.5,2.5);

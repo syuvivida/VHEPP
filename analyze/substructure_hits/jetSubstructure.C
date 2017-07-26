@@ -38,9 +38,8 @@ void jetSubstructure(string inputDir, float radius=0.4, int mode=0){
   else if(inputDir.find("rfull012")!=std::string::npos)decversion="rfull012";
   else if(inputDir.find("rfull010")!=std::string::npos)decversion="rfull010";
 
-  std::string treeName = mode==0 ? "tcalo":"trawhits";
-  std::string title = mode==0? Form("Anti-kt jet #Delta R = %.1f",radius):
-    Form("Anti-kT jet #Delta R = %.1f",radius);
+  std::string treeName = "trawhits";
+  std::string title = Form("Anti-kt jet #Delta R = %.1f",radius);
 
 
 
@@ -81,7 +80,7 @@ void jetSubstructure(string inputDir, float radius=0.4, int mode=0){
       h_sub[ih]->SetYTitle(Form("Number of jets per %.2f",binwidth));
     }
 
-  string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_rawhit_fastjet.root"; //"_response_e2.root";
+  string inputFile = inputDir + "/radius" + Form("%0.1f",radius)+ "_rawhit_fastjet_mode" + Form("%d",mode) + ".root"; //"_response_e2.root";
   cout << "opening " << inputFile.data() << endl;
   TreeReader genTree(inputFile.data(),"tGEN_nonu");
   TreeReader caloTree(inputFile.data(),treeName.data());
