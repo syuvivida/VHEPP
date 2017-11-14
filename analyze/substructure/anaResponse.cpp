@@ -568,6 +568,66 @@ int main (int argc, char **argv) {
     tGEN_nonu->Branch("jisleptag"      , &jisleptag      );        
     tGEN_nonu->Branch("costheta1"      , &costheta1      );    
 
+    tGEN_nonu->Branch("j_tau1_b1"        , &j_tau1_b1        );
+    tGEN_nonu->Branch("j_tau2_b1"        , &j_tau2_b1        );
+    tGEN_nonu->Branch("j_tau3_b1"        , &j_tau3_b1        );    
+    tGEN_nonu->Branch("j_tau1_b2"        , &j_tau1_b2        );
+    tGEN_nonu->Branch("j_tau2_b2"        , &j_tau2_b2        );
+    tGEN_nonu->Branch("j_tau3_b2"        , &j_tau3_b2        );    
+    tGEN_nonu->Branch("j_tau21_b1"       , &j_tau21_b1       );
+    tGEN_nonu->Branch("j_tau21_b2"       , &j_tau21_b2       );
+    tGEN_nonu->Branch("j_tau21_b1"       , &j_tau21_b1       );
+    tGEN_nonu->Branch("j_tau21_b2"       , &j_tau21_b2       );
+    tGEN_nonu->Branch("j_tau32_b1"       , &j_tau32_b1       );
+    tGEN_nonu->Branch("j_tau32_b2"       , &j_tau32_b2       );
+    tGEN_nonu->Branch("j_zlogz"          , &j_zlogz          );
+    tGEN_nonu->Branch("j_c1_b0"          , &j_c1_b0          );
+    tGEN_nonu->Branch("j_c1_b1"          , &j_c1_b1          );
+    tGEN_nonu->Branch("j_c1_b2"          , &j_c1_b2          );
+    tGEN_nonu->Branch("j_c2_b1"          , &j_c2_b1          );
+    tGEN_nonu->Branch("j_c2_b2"          , &j_c2_b2          );
+    tGEN_nonu->Branch("j_d2_b1"          , &j_d2_b1          );
+    tGEN_nonu->Branch("j_d2_b2"          , &j_d2_b2          );
+    tGEN_nonu->Branch("j_d2_a1_b1"       , &j_d2_a1_b1       );
+    tGEN_nonu->Branch("j_d2_a1_b2"       , &j_d2_a1_b2       );
+    tGEN_nonu->Branch("j_m2_b1"          , &j_m2_b1          );
+    tGEN_nonu->Branch("j_m2_b2"          , &j_m2_b2          );
+    tGEN_nonu->Branch("j_n2_b1"          , &j_n2_b1          );
+    tGEN_nonu->Branch("j_n2_b2"          , &j_n2_b2          );
+
+    tGEN_nonu->Branch("j_tau1_b1_mmdt"        , &j_tau1_b1_mmdt        );
+    tGEN_nonu->Branch("j_tau2_b1_mmdt"        , &j_tau2_b1_mmdt        );
+    tGEN_nonu->Branch("j_tau3_b1_mmdt"        , &j_tau3_b1_mmdt        );    
+    tGEN_nonu->Branch("j_tau1_b2_mmdt"        , &j_tau1_b2_mmdt        );
+    tGEN_nonu->Branch("j_tau2_b2_mmdt"        , &j_tau2_b2_mmdt        );
+    tGEN_nonu->Branch("j_tau3_b2_mmdt"        , &j_tau3_b2_mmdt        );    
+    tGEN_nonu->Branch("j_tau21_b1_mmdt"       , &j_tau21_b1_mmdt       );
+    tGEN_nonu->Branch("j_tau21_b2_mmdt"       , &j_tau21_b2_mmdt       );
+    tGEN_nonu->Branch("j_tau21_b1_mmdt"       , &j_tau21_b1_mmdt       );
+    tGEN_nonu->Branch("j_tau21_b2_mmdt"       , &j_tau21_b2_mmdt       );
+    tGEN_nonu->Branch("j_tau32_b1_mmdt"       , &j_tau32_b1_mmdt       );
+    tGEN_nonu->Branch("j_tau32_b2_mmdt"       , &j_tau32_b2_mmdt       );
+    tGEN_nonu->Branch("j_c1_b0_mmdt"          , &j_c1_b0_mmdt          );
+    tGEN_nonu->Branch("j_c1_b1_mmdt"          , &j_c1_b1_mmdt          );
+    tGEN_nonu->Branch("j_c1_b2_mmdt"          , &j_c1_b2_mmdt          );
+    tGEN_nonu->Branch("j_c2_b1_mmdt"          , &j_c2_b1_mmdt          );
+    tGEN_nonu->Branch("j_c2_b2_mmdt"          , &j_c2_b2_mmdt          );
+    tGEN_nonu->Branch("j_d2_b1_mmdt"          , &j_d2_b1_mmdt          );
+    tGEN_nonu->Branch("j_d2_b2_mmdt"          , &j_d2_b2_mmdt          );
+    tGEN_nonu->Branch("j_d2_a1_b1_mmdt"       , &j_d2_a1_b1_mmdt       );
+    tGEN_nonu->Branch("j_d2_a1_b2_mmdt"       , &j_d2_a1_b2_mmdt       );
+    tGEN_nonu->Branch("j_m2_b1_mmdt"          , &j_m2_b1_mmdt          );
+    tGEN_nonu->Branch("j_m2_b2_mmdt"          , &j_m2_b2_mmdt          );
+    tGEN_nonu->Branch("j_n2_b1_mmdt"          , &j_n2_b1_mmdt          );
+    tGEN_nonu->Branch("j_n2_b2_mmdt"          , &j_n2_b2_mmdt          );
+
+    tGEN_nonu->Branch("j_mass_trim"      , &j_mass_trim      );
+    tGEN_nonu->Branch("j_mass_mmdt"      , &j_mass_mmdt      );
+    tGEN_nonu->Branch("j_mass_prun"      , &j_mass_prun      );
+    tGEN_nonu->Branch("j_mass_sdb2"      , &j_mass_sdb2      );
+    tGEN_nonu->Branch("j_mass_sdm1"      , &j_mass_sdm1      );
+
+
     TTree *tGEN_response = new TTree("tGEN_response","Tree with vectors");
     tGEN_response->Branch("njets"          , &njets      );
     tGEN_response->Branch("je"             , &je         );
@@ -635,11 +695,11 @@ int main (int argc, char **argv) {
         if (ctr > 0){
 	  
  	    clearVectors();
- 	    analyzeEvent( allParticlesGEN, jetRadius, allParticlesMC, true);
+ 	    analyzeEvent( allParticlesGEN, jetRadius, allParticlesMC);
 	    tGEN->Fill();
 	
  	    clearVectors();
- 	    analyzeEvent( allParticlesGEN_nonu, jetRadius, allParticlesMC );
+ 	    analyzeEvent( allParticlesGEN_nonu, jetRadius, allParticlesMC, true );
 	    tGEN_nonu->Fill();
 	    
  	    clearVectors();
