@@ -12,9 +12,9 @@ const double MW = 80.379;
 const double Mu = 0.0022;
 const double Md = 0.0047;
 
-void simulate_ZprimeWW(double MZprime, const unsigned int ntrials=20000, bool debug=false)
+void simulate_ZprimeWW(double MZprime, const unsigned int ntrials=20000, bool extreme=false, bool debug=false)
 {
-
+  // extreme case is when the decay angle is set to pi/2 and no rotation of decay plane
   // momentum of W in the rest frame of Z' (in the lepton collider, it's also the lab frame)
   double pW= sqrt(MZprime*MZprime-4*MW*MW)*0.5;
   TH1F* hdR   = new TH1F("hdR","",100,0,10);
@@ -69,7 +69,8 @@ void simulate_ZprimeWW(double MZprime, const unsigned int ntrials=20000, bool de
       // energy of daughter 2 at the rest frame of W
       double E2= sqrt(p*p+Md*Md);
 
-      double decayAngle = gRandom3->Rndm()*TMath::Pi();
+      double decayAngle = extreme? 0.5*TMath::Pi():
+	gRandom3->Rndm()*TMath::Pi();
       hdecayAngle->Fill(decayAngle);
 
       // momentum of particle 1 in the lab frame
@@ -103,7 +104,7 @@ void simulate_ZprimeWW(double MZprime, const unsigned int ntrials=20000, bool de
 
 
       // now do the rotation
-      double rotation = gRandom3->Rndm()*TMath::Pi()*2.0;
+      double rotation = extreme? 0: gRandom3->Rndm()*TMath::Pi()*2.0;
       hrotation->Fill(rotation);
       v3_p1.Rotate(rotation,unit_pW);
       v3_p2.Rotate(rotation,unit_pW);

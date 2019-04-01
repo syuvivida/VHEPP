@@ -21,6 +21,7 @@ const double Mt = 173.0;
 void simulate_Zprimett(double MZprime, const unsigned int ntrials=20000, bool extreme=false, bool debug=false)
 {
 
+  // extreme case is when the decay angle is set to pi/2 and no rotation of decay plane
   // momentum of top in the rest frame of Z' (in the lepton collider, it's also the lab frame)
   double ptop= sqrt(MZprime*MZprime-4*Mt*Mt)*0.5;
   TH1F* hdR   = new TH1F("hdR","",100,0,10);
