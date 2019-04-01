@@ -5,6 +5,7 @@
 #include <TMath.h>
 #include <iostream>
 #include <TH1.h>
+#include <TROOT.h>
 
 using namespace std;
 const double MW = 80.379;
@@ -53,13 +54,11 @@ void simulate_ZprimeWW(double MZprime, const unsigned int ntrials=20000, bool de
       TVector3 orth_pW = l4_W.Vect().Orthogonal().Unit();
       if(debug)orth_pW.Print();
 
-      double E_mother = sqrt(pW*pW + MW*MW);
+      double beta = l4_W.Beta();
 
-      double beta = pW/E_mother;
-
-      double gamma = 1/sqrt(1-beta*beta);
+      double gamma = l4_W.Gamma();
   
-      // momentum of daughter 1 at the rest frame of W
+      // momentum of daughters at the rest frame of W
 
       double p= sqrt( (MW*MW-(Mu+Md)*(Mu+Md))*
 		      (MW*MW-(Mu-Md)*(Mu-Md)))*0.5/MW; 
@@ -134,7 +133,10 @@ void simulate_ZprimeWW(double MZprime, const unsigned int ntrials=20000, bool de
   
   cout << "average deltaR, assuming a flat decay angle distribution";
   cout << " is " << hdR->GetMean() << " +- " << hdR->GetMeanError() << endl;
-  
+
+  cout << "average opening angle, assuming a flat decay angle distribution";
+  cout << " is " << hopen->GetMean() << " +- " << hopen->GetMeanError() << endl;
+
   
 }
 
