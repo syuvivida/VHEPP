@@ -97,7 +97,9 @@ Try a few commands in https://atlaswww.hep.anl.gov/hepsim/doc/doku.php?id=hepsim
 singularity exec centos7hepsim.img bash -l
 ```
 
-### Download Sergei's ana example
+### Analyzing data
+
+#### Download Sergei's ana example
 
 ```
 tar xvzf ana_jets_time.tgz
@@ -106,7 +108,50 @@ cd ana_jets_time
 Modify the path of centos7hepsim.img in ana_jets_time/msetup.sh, then
 
 ```
+bash
 source msetup.sh
 make
 ```
-Follow the instruction in ana_jets_time/README
+
+#### Add missing steps and missing files
+Follow the instruction in ana_jets_time/README up to step 4).
+
+Note, now you are in the directory of ana_jets_time.
+
+Move all the data files:
+```
+mkdir -p data/pgun_pi
+mv data/pgun*slcio data/pgun_pi/.
+```
+Download detector geometry file for the corresponding input dataset
+```
+wget https://atlaswww.hep.anl.gov/hepsim/soft/detectors/sifcch7.zip && unzip sifcch7.zip sifcch7.pandora && rm -rf sifcch7.zip
+mkdir -p data/rfull009_sifcch7/sifcch7/
+mv sifcch7.pandora data/rfull009_sifcch7/sifcch7/.
+```
+
+Now you need to modify the data file names in ana_jets_time/A_RUN. Replace the following lines:
+```
+DAT="pgun_pi10gev"
+```
+
+with the energy you want to run on or add extra lines to run on multiple energies in one job
+```
+DAT="pgun_pi100gev"
+ls -1 data/pgun_pi/$DAT* > data.in
+./ana
+mv root/output.root root/$DAT.root
+```
+
+
+### Run ana example on the downloaded data
+
+Continue from step 5) of ana_jets_time/README and come back to the directory where you store centos7hepsim.img 
+
+```
+singularity exec centos7hepsim.img bash -l
+cd ana_jets_time
+./A_RUN
+```
+
+### Study the root files in ana_jets_time/root directory
