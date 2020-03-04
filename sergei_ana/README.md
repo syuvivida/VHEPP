@@ -114,24 +114,13 @@ make
 logout
 ```
 
-### Add missing steps and missing files
-Follow the instruction in ana_jets_time/README up to step 4).
+### Follow the instruction in ana_jets_time/README 
 
-Note, now you are in the directory of ana_jets_time.
+Follow the instruction up to step 5)
 
-Move all the data files:
-```
-mkdir -p data/pgun_pi
-mv data/pgun*slcio data/pgun_pi/.
-```
-Download detector geometry file for the corresponding input dataset
-```
-wget https://atlaswww.hep.anl.gov/hepsim/soft/detectors/sifcch7.zip && unzip sifcch7.zip sifcch7.pandora && rm -rf sifcch7.zip
-mkdir -p data/rfull009_sifcch7/sifcch7/
-mv sifcch7.pandora data/rfull009_sifcch7/sifcch7/.
-```
+Before you run the job, you could modify the data file names in ana_jets_time/A_RUN.
 
-Now you need to modify the data file names in ana_jets_time/A_RUN. Replace the following lines:
+Replace the following lines:
 ```
 DAT="pgun_pi10gev"
 ```
@@ -147,12 +136,7 @@ mv root/output.root root/$DAT.root
 
 ### Run ana example on the downloaded data
 
-Continue from step 5) of ana_jets_time/README and come back to the directory where you store centos7hepsim.img 
+Continue from step 6) of ana_jets_time/README
 
-```
-singularity exec centos7hepsim.img bash -l
-cd ana_jets_time
-./A_RUN
-```
 
 ### Study the root files in ana_jets_time/root directory
