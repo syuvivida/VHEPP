@@ -45,7 +45,7 @@ source hs-toolkit/setup.sh
 Try a few hs commands to see if your setup is OK.
 
 
-## HepSim Docker image
+## HepSim Docker image in Ubuntu
 ### Install singularity
 Follow the basic steps in this link: https://sylabs.io/guides/3.5/user-guide/quick_start.html#quick-installation-steps
 
