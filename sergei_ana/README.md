@@ -110,7 +110,7 @@ Modify the path of centos7hepsim.img in ana_jets_time/msetup.sh
 
 ### Follow the instruction in ana_jets_time/README 
 
-Follow the instruction up to step 5)
+Follow the instruction up to step 5). Note to run the commands in bash.
 
 Before you run the job, you could modify the data file names in ana_jets_time/A_RUN.
 
