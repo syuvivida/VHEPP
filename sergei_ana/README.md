@@ -111,6 +111,7 @@ Modify the path of centos7hepsim.img in ana_jets_time/msetup.sh, then
 bash
 source msetup.sh
 make
+logout
 ```
 
 #### Add missing steps and missing files
