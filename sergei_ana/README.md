@@ -6,7 +6,9 @@ https://thishosting.rocks/install-java-ubuntu/
 
 First download jdk tarball from (eg. jdk-11.0.6_linux-x64_bin.tar.gz):
 https://www.oracle.com/java/technologies/javase-jdk11-downloads.html
+
 Note, you need to have an Oracle account to download the file.
+
 Then, follow the steps below.
 ```
 sudo apt-get update && sudo apt-get upgrade
@@ -38,4 +40,4 @@ Now you could do the setup:
 ```
 source hs-toolkit/setup.sh
 ```
-Try a few hs commands to see if your seup is OK.
+Try a few hs commands to see if your setup is OK.
