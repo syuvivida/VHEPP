@@ -99,20 +99,14 @@ singularity exec centos7hepsim.img bash -l
 
 ## Analyzing data
 
-### Download Sergei's ana example from this github repository
+### Download ana_jets_time.tgz from this github repository
 
 ```
 tar xvzf ana_jets_time.tgz
 cd ana_jets_time
 ```
-Modify the path of centos7hepsim.img in ana_jets_time/msetup.sh, then
 
-```
-bash
-source msetup.sh
-make
-logout
-```
+Modify the path of centos7hepsim.img in ana_jets_time/msetup.sh 
 
 ### Follow the instruction in ana_jets_time/README 
 
