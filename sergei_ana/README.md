@@ -97,9 +97,9 @@ Try a few commands in https://atlaswww.hep.anl.gov/hepsim/doc/doku.php?id=hepsim
 singularity exec centos7hepsim.img bash -l
 ```
 
-### Analyzing data
+## Analyzing data
 
-#### Download Sergei's ana example
+### Download Sergei's ana example
 
 ```
 tar xvzf ana_jets_time.tgz
@@ -114,7 +114,7 @@ make
 logout
 ```
 
-#### Add missing steps and missing files
+### Add missing steps and missing files
 Follow the instruction in ana_jets_time/README up to step 4).
 
 Note, now you are in the directory of ana_jets_time.
