@@ -86,8 +86,27 @@ cd singularity
 singularity help
 ```
 
-### Download image file (this could take one day) and use singularity
+### Download image file (this could take one hour to half a day) and use singularity
 ```
 wget http://atlaswww.hep.anl.gov/hepsim/soft/centos7hepsim.img
+```
+
+Try a few commands in https://atlaswww.hep.anl.gov/hepsim/doc/doku.php?id=hepsim:dev_singularity
+
+```
 singularity exec centos7hepsim.img bash -l
 ```
+
+### Download Sergei's ana example
+
+```
+tar xvzf ana_jets_time.tgz
+cd ana_jets_time
+```
+Modify the path of centos7hepsim.img in ana_jets_time/msetup.sh, then
+
+```
+source msetup.sh
+make
+```
+Follow the instruction in ana_jets_time/README
