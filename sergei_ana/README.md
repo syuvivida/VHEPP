@@ -99,7 +99,7 @@ singularity exec centos7hepsim.img bash -l
 
 ## Analyzing data
 
-### Download Sergei's ana example
+### Download Sergei's ana example from this github repository
 
 ```
 tar xvzf ana_jets_time.tgz
